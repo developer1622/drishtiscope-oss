@@ -1,22 +1,39 @@
-# binaries
+# Binaries and build artifacts
 /agentscope
 /backend/agentscope
+/drishtiscope
+/backend/drishtiscope
 *.exe
 *.test
 *.out
+dist/
+/dist/
 
-# frontend
+# Frontend dependencies and builds
 frontend/node_modules/
 frontend/dist/
+.vite/
 
-# editor / OS
+# Database files and locks
+*.db
+*.db-shm
+*.db-wal
+*.pid
+backend/*.db
+backend/internal/storage/*.db
+
+# Temporary scratch and test outputs
+scratch/
+videos/page@*.webm
+
+# Editor & OS
 .DS_Store
 .idea/
 .vscode/
 *.swp
 *.log
 
-# env
+# Environment variables
 .env
 .env.local
 
