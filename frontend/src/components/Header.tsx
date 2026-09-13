@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ModeChip } from './ModeChip';
 import { HelloPayload, ConnectionStatus, ProcessRow } from '../types/protocol';
-import { agentLabel } from '../utils/format';
+import { agentLabel, fmtBytes } from '../utils/format';
 import { useScopeStore, TabType, ThemeMode } from '../store/useScopeStore';
 import { apiHeaders } from '../utils/api';
 import { MetricHelpButton } from './MetricHelpModal';
 import {
   Search,
+  X,
+  Check,
   Server,
   Crosshair,
   Sun,
@@ -42,9 +44,28 @@ export function Header({
   processes?: ProcessRow[];
   onTargetSelect?: (comm: string, pid?: number) => void;
 }) {
-  const [targetInput, setTargetInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setIsSearchOpen(false);
+        setHighlightedIndex(-1);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const {
     theme,
@@ -94,7 +115,9 @@ export function Header({
       if (!res.ok) {
         setErr(`target failed (${res.status})`);
       } else {
-        setTargetInput('');
+        setSearchQuery('');
+        setIsSearchOpen(false);
+        setHighlightedIndex(-1);
         if (onTargetSelect) onTargetSelect(comm, pid);
       }
     } catch (e) {
@@ -104,15 +127,9 @@ export function Header({
     }
   };
 
-  const handleTargetSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const raw = targetInput.trim();
-    if (!raw) return;
-    if (/^\d+$/.test(raw)) {
-      await applyTarget('', Number(raw));
-    } else {
-      await applyTarget(raw, 0);
-    }
+  const selectProcess = async (p: ProcessRow) => {
+    const label = agentLabel(p.comm, p.cmdline);
+    await applyTarget(label, p.pid);
   };
 
   const statusColors = {
@@ -167,19 +184,83 @@ export function Header({
     { id: 'unix', label: 'Unix', icon: <Terminal size={13} />, title: 'Unix/Terminal Mode' },
   ];
 
-  const uniqueProcesses = Array.from(
-    new Map(processes.map((p) => [agentLabel(p.comm, p.cmdline) + ':' + p.pid, p])).values()
-  );
-  const currentTargetValue = uniqueProcesses.find((p) => {
-    const label = agentLabel(p.comm, p.cmdline).toLowerCase();
-    const target = (targetLabel || '').toLowerCase();
-    return label === target || p.comm.toLowerCase() === target || target.includes(p.comm.toLowerCase()) || target.includes(String(p.pid));
-  });
+  // Filter suggestions of currently executing processes based on search query
+  const query = searchQuery.trim().toLowerCase();
+  const currentTargetClean = (targetLabel || '').toLowerCase();
+
+  const filteredProcesses = processes
+    .filter((p) => {
+      if (!query) return true;
+      const label = agentLabel(p.comm, p.cmdline).toLowerCase();
+      const pidStr = String(p.pid);
+      const comm = p.comm.toLowerCase();
+      const cmdline = (p.cmdline || '').toLowerCase();
+      return (
+        label.includes(query) ||
+        pidStr.includes(query) ||
+        comm.includes(query) ||
+        cmdline.includes(query)
+      );
+    })
+    .sort((a, b) => {
+      // Prioritize currently observed target
+      const aIsTarget =
+        currentTargetClean.includes(String(a.pid)) ||
+        currentTargetClean.includes(a.comm.toLowerCase());
+      const bIsTarget =
+        currentTargetClean.includes(String(b.pid)) ||
+        currentTargetClean.includes(b.comm.toLowerCase());
+      if (aIsTarget && !bIsTarget) return -1;
+      if (!aIsTarget && bIsTarget) return 1;
+
+      // Prioritize CPU usage, then RSS
+      if (b.cpu_pct !== a.cpu_pct) return b.cpu_pct - a.cpu_pct;
+      return b.rss_bytes - a.rss_bytes;
+    });
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (!isSearchOpen) {
+      if (e.key === 'ArrowDown' || e.key === 'Enter') {
+        setIsSearchOpen(true);
+        e.preventDefault();
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev < filteredProcesses.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev > 0 ? prev - 1 : filteredProcesses.length - 1
+      );
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && highlightedIndex < filteredProcesses.length) {
+        selectProcess(filteredProcesses[highlightedIndex]);
+      } else if (filteredProcesses.length === 1) {
+        selectProcess(filteredProcesses[0]);
+      } else if (searchQuery.trim()) {
+        const raw = searchQuery.trim();
+        if (/^\d+$/.test(raw)) {
+          applyTarget('', Number(raw));
+        } else {
+          applyTarget(raw, 0);
+        }
+      }
+    } else if (e.key === 'Escape') {
+      setIsSearchOpen(false);
+      setHighlightedIndex(-1);
+    }
+  };
 
   return (
     <header className="bg-panel border-b border-border z-30 sticky top-0 shrink-0 w-full transition-colors shadow-sm">
       {/* DrishtiScope Top Bar */}
-      <div className="h-14 flex items-center justify-between px-3 sm:px-4 gap-2 w-full overflow-x-auto scrollbar-none flex-nowrap">
+      <div className="h-14 flex items-center justify-between px-3 sm:px-4 gap-2 w-full relative">
         {/* Brand (Left) */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-nowrap">
           {/* DrishtiScope Spectrum Emblem */}
@@ -213,41 +294,161 @@ export function Header({
 
         {/* Unified Controls (Right) - All in a Single Straight Line */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 justify-end ml-auto flex-nowrap whitespace-nowrap">
-          {/* Single Unified Process Target Omnibox (Only 1 Search Option) */}
-          <div className="relative flex items-center bg-panel2 border border-border focus-within:border-cyan focus-within:ring-1 focus-within:ring-cyan rounded-lg px-2.5 py-1 text-xs font-mono text-txt shadow-sm transition-all gap-1.5 shrink-0">
-            <Search size={13} className="text-cyan shrink-0" />
-            <form onSubmit={handleTargetSubmit} className="flex items-center min-w-0">
+          {/* Executing Processes Search Omnibox & Live Suggestions Dropdown */}
+          <div ref={searchContainerRef} className="relative shrink-0">
+            <div
+              className={`flex items-center bg-panel2 border rounded-lg px-2.5 py-1 text-xs font-mono text-txt shadow-sm transition-all gap-1.5 ${
+                isSearchOpen
+                  ? 'border-cyan ring-1 ring-cyan/40 bg-panel'
+                  : 'border-border hover:border-border/80'
+              }`}
+            >
+              <Search size={13} className="text-cyan shrink-0" />
               <input
+                ref={searchInputRef}
                 type="text"
-                list="header-process-options"
-                placeholder={targetLabel ? `${targetLabel} (/)` : 'Target PID or process... (/)'}
-                className="bg-transparent text-xs text-txt placeholder:text-muted/70 focus:outline-none w-20 sm:w-36 md:w-48 font-mono leading-none truncate"
-                value={targetInput}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setTargetInput(val);
-                  // Immediate apply if user selects a datalist item or typed an exact PID
-                  const matched = processes.find(
-                    (p) => String(p.pid) === val.trim() || p.comm.toLowerCase() === val.trim().toLowerCase()
-                  );
-                  if (matched) {
-                    const label = agentLabel(matched.comm, matched.cmdline);
-                    applyTarget(label, matched.pid);
-                  }
+                value={searchQuery}
+                placeholder={targetLabel ? `Search: ${targetLabel} (/)` : 'Search executing processes... (/)'}
+                className="bg-transparent text-xs text-txt placeholder:text-muted/70 focus:outline-none w-28 sm:w-44 md:w-56 font-mono leading-none truncate"
+                onFocus={() => {
+                  setIsSearchOpen(true);
+                  setHighlightedIndex(-1);
                 }}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchOpen(true);
+                  setHighlightedIndex(-1);
+                }}
+                onKeyDown={handleSearchKeyDown}
                 disabled={busy}
               />
-            </form>
-            <datalist id="header-process-options">
-              {uniqueProcesses.map((p) => {
-                const label = agentLabel(p.comm, p.cmdline);
-                return (
-                  <option key={p.pid} value={String(p.pid)}>
-                    PID {p.pid} · {label}
-                  </option>
-                );
-              })}
-            </datalist>
+              {busy ? (
+                <div className="w-3 h-3 rounded-full border border-cyan border-t-transparent animate-spin shrink-0" />
+              ) : searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setHighlightedIndex(-1);
+                    searchInputRef.current?.focus();
+                  }}
+                  className="text-muted hover:text-txt p-0.5 rounded transition-colors shrink-0"
+                  title="Clear search"
+                >
+                  <X size={12} />
+                </button>
+              ) : null}
+            </div>
+
+            {/* Suggestions Dropdown: Current Executing Processes */}
+            {isSearchOpen && (
+              <div className="absolute right-0 top-full mt-1.5 w-80 sm:w-96 max-h-80 bg-panel border border-border rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden animate-in fade-in-50 zoom-in-95 duration-100">
+                {/* Header */}
+                <div className="px-3 py-2 bg-panel2/80 border-b border-border flex items-center justify-between gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5">
+                    <Activity size={12} className="text-cyan" />
+                    <span className="text-[11px] font-bold text-txt">Current Executing Processes</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan/15 text-cyan border border-cyan/30 font-mono">
+                      {filteredProcesses.length}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-muted font-mono hidden sm:inline">
+                    ↑↓ navigate · ↵ select · esc close
+                  </span>
+                </div>
+
+                {/* Suggestions List */}
+                <div className="overflow-y-auto max-h-60 divide-y divide-border/30">
+                  {filteredProcesses.length === 0 ? (
+                    <div className="p-4 text-center text-xs font-mono text-muted">
+                      No executing processes match "{searchQuery}"
+                      {searchQuery.trim() && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const raw = searchQuery.trim();
+                            if (/^\d+$/.test(raw)) {
+                              applyTarget('', Number(raw));
+                            } else {
+                              applyTarget(raw, 0);
+                            }
+                          }}
+                          className="mt-2 block w-full py-1.5 px-2 rounded bg-panel2 hover:bg-cyan/20 text-cyan text-center border border-border transition-colors text-[11px]"
+                        >
+                          Target "{searchQuery.trim()}" directly →
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    filteredProcesses.slice(0, 25).map((p, idx) => {
+                      const label = agentLabel(p.comm, p.cmdline);
+                      const isHighlighted = idx === highlightedIndex;
+                      const isTarget =
+                        currentTargetClean.includes(String(p.pid)) ||
+                        currentTargetClean.includes(p.comm.toLowerCase());
+
+                      return (
+                        <button
+                          key={p.pid}
+                          type="button"
+                          onClick={() => selectProcess(p)}
+                          onMouseEnter={() => setHighlightedIndex(idx)}
+                          className={`w-full text-left px-3 py-2 flex items-center justify-between gap-2 text-xs font-mono transition-colors ${
+                            isHighlighted
+                              ? 'bg-cyan/15 text-txt'
+                              : isTarget
+                              ? 'bg-panel2/80 text-txt'
+                              : 'hover:bg-panel2 text-muted hover:text-txt'
+                          }`}
+                        >
+                          <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 truncate">
+                              <span className="font-bold text-txt truncate">{label}</span>
+                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-panel border border-border text-cyan font-semibold shrink-0">
+                                PID {p.pid}
+                              </span>
+                              {isTarget && (
+                                <span className="text-[9px] px-1.5 py-0.2 rounded bg-green/15 text-green border border-green/30 font-semibold shrink-0 flex items-center gap-0.5">
+                                  <Check size={10} /> Active
+                                </span>
+                              )}
+                              <span
+                                className={`text-[9px] px-1 py-0.2 rounded shrink-0 font-bold ${
+                                  p.state === 'R'
+                                    ? 'bg-green/20 text-green'
+                                    : p.state === 'D'
+                                    ? 'bg-amber/20 text-amber'
+                                    : 'bg-panel border border-border text-muted'
+                                }`}
+                                title={`Process state: ${p.state}`}
+                              >
+                                {p.state}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-muted truncate">
+                              {p.cmdline || p.exe || p.comm}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end gap-0.5 shrink-0 text-[10px]">
+                            <span className="font-bold text-cyan">{p.cpu_pct.toFixed(1)}% CPU</span>
+                            <span className="text-muted">{fmtBytes(p.rss_bytes)}</span>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Footer status / count if truncated */}
+                {filteredProcesses.length > 25 && (
+                  <div className="px-3 py-1 bg-panel2/50 border-t border-border/50 text-[10px] text-muted font-mono text-center shrink-0">
+                    Showing top 25 of {filteredProcesses.length} executing processes. Type to narrow search.
+                  </div>
+                )}
+              </div>
+            )}
+
             {err && (
               <div className="absolute right-0 top-full mt-1 text-[10px] text-rose bg-panel border border-border rounded px-2 py-0.5 shadow z-50 whitespace-nowrap">
                 {err}
