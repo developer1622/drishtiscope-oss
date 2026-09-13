@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ModeChip } from './ModeChip';
+import { Logo } from './Logo';
 import { HelloPayload, ConnectionStatus, ProcessRow } from '../types/protocol';
 import { agentLabel, fmtBytes } from '../utils/format';
 import { useScopeStore, TabType, ThemeMode } from '../store/useScopeStore';
@@ -263,21 +264,14 @@ export function Header({
       <div className="h-14 flex items-center justify-between px-3 sm:px-4 gap-2 w-full relative">
         {/* Brand (Left) */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-nowrap">
-          {/* DrishtiScope Spectrum Emblem */}
+          {/* DrishtiScope Brand & Logo */}
           <div className="flex items-center gap-2 text-txt font-bold text-base sm:text-lg tracking-tight shrink-0">
-            <div className="flex items-center gap-1.5 p-1.5 rounded-lg bg-panel2 border border-border shrink-0">
-              <div className="flex items-center gap-0.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan" title="eBPF Kernel Trace" />
-                <span className="w-2.5 h-2.5 rounded-full bg-rose" title="Security Alerts" />
-                <span className="w-2.5 h-2.5 rounded-full bg-amber" title="Performance Metrics" />
-                <span className="w-2.5 h-2.5 rounded-full bg-green" title="Health Signals" />
-              </div>
-            </div>
+            <Logo size={32} />
 
             <div className="hidden sm:flex flex-col shrink-0">
               <div className="flex items-center gap-1.5 leading-none">
                 <span className="text-txt font-bold tracking-tight">DrishtiScope</span>
-                <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-cyan/15 text-cyan border border-cyan/30">
+                <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-cyan/15 text-cyan border border-cyan/30 font-mono">
                   दृष्टि
                 </span>
               </div>

@@ -2,9 +2,13 @@
 
 <div align="center">
 
+<img src="docs/images/drishtiscope_logo.png" alt="DrishtiScope Logo" width="220" />
+
+<br/>
+
 > **Sanskrit: दृष्टि (Drishti — Insight, Clear Seeing, Perception) + English: Scope (Observatory Instrument)**  
-> **The Real-Time SRE Control Room for Autonomous AI Agents & LLM Runtimes.**  
-> *Kernel-grounded process observability for coding agents and AI runtimes — without an SDK, without a proxy, without sending telemetry to the cloud.*
+> **Real-Time Kernel-Grounded Process Observability for Autonomous AI Agents & LLM Runtimes.**  
+> *Process observability for coding agents and AI runtimes — without an SDK, without a proxy, without sending telemetry to the cloud.*
 
 [![CI](https://github.com/drishtiscope/drishtiscope/actions/workflows/ci.yml/badge.svg)](https://github.com/drishtiscope/drishtiscope/actions/workflows/ci.yml)
 [![Docker](https://github.com/drishtiscope/drishtiscope/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/drishtiscope/drishtiscope/actions/workflows/docker-publish.yml)
