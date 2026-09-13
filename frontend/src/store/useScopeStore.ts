@@ -16,6 +16,7 @@ interface ScopeStore {
   activeTab: TabType;
   isPaused: boolean;
   timeRange: string;
+  activeMetricHelpId: string | null;
 
   setSnapshot: (s: Snapshot) => void;
   addEvent: (e: EventRow) => void;
@@ -27,6 +28,8 @@ interface ScopeStore {
   setActiveTab: (t: TabType) => void;
   togglePause: () => void;
   setTimeRange: (tr: string) => void;
+  openMetricHelp: (id: string) => void;
+  closeMetricHelp: () => void;
 }
 
 export const useScopeStore = create<ScopeStore>((set) => ({
@@ -41,6 +44,7 @@ export const useScopeStore = create<ScopeStore>((set) => ({
   activeTab: 'basic',
   isPaused: false,
   timeRange: 'live',
+  activeMetricHelpId: null,
 
   setSnapshot: (s) =>
     set((state) => {
@@ -62,6 +66,8 @@ export const useScopeStore = create<ScopeStore>((set) => ({
   setSelectedPid: (pid) => set({ selectedPid: pid }),
   togglePause: () => set((state) => ({ isPaused: !state.isPaused })),
   setTimeRange: (tr) => set({ timeRange: tr }),
+  openMetricHelp: (id) => set({ activeMetricHelpId: id }),
+  closeMetricHelp: () => set({ activeMetricHelpId: null }),
   toggleTheme: () =>
     set((state) => {
       const nextTheme = state.theme === 'dark' ? 'light' : 'dark';

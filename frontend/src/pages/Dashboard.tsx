@@ -6,6 +6,7 @@ import { BasicTab } from '../components/tabs/BasicTab';
 import { MediumTab } from '../components/tabs/MediumTab';
 import { AdvancedTab } from '../components/tabs/AdvancedTab';
 import { CompletePictureTab } from '../components/tabs/CompletePictureTab';
+import { MetricHelpModal } from '../components/MetricHelpModal';
 import { apiHeaders } from '../utils/api';
 
 export function Dashboard() {
@@ -109,6 +110,7 @@ export function Dashboard() {
       </main>
 
       <StatusBar meta={snapshot?.meta} schema={hello?.schema} />
+      <MetricHelpModal />
     </div>
   );
 }

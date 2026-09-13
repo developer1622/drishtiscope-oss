@@ -1,6 +1,7 @@
 import React from 'react';
 import { FileStat } from '../types/protocol';
 import { fmtBytes } from '../utils/format';
+import { MetricHelpButton } from './MetricHelpModal';
 
 export function FileTable({ files }: { files: FileStat[] }) {
   const maxOps = Math.max(...files.map(f => f.ops_s), 1);
@@ -10,10 +11,30 @@ export function FileTable({ files }: { files: FileStat[] }) {
       <table className="w-full border-collapse">
         <thead>
           <tr className="text-muted border-b border-border text-xs sticky top-0 bg-panel z-10">
-            <th className="py-2 px-3 font-normal w-1/2">PATH</th>
-            <th className="py-2 px-3 font-normal w-1/4">OPS/S</th>
-            <th className="py-2 px-3 font-normal text-right">BYTES/S</th>
-            <th className="py-2 px-3 font-normal text-right">ERRS</th>
+            <th className="py-2 px-3 font-normal w-1/2">
+              <div className="inline-flex items-center gap-1">
+                <span>PATH</span>
+                <MetricHelpButton metricId="file_ops" color="cyan" size={12} title="Filesystem path inspected by eBPF openat" />
+              </div>
+            </th>
+            <th className="py-2 px-3 font-normal w-1/4">
+              <div className="inline-flex items-center gap-1">
+                <span>OPS/S</span>
+                <MetricHelpButton metricId="file_ops" color="amber" size={12} title="File operations frequency" />
+              </div>
+            </th>
+            <th className="py-2 px-3 font-normal text-right">
+              <div className="inline-flex items-center justify-end gap-1 w-full">
+                <span>BYTES/S</span>
+                <MetricHelpButton metricId="disk_io" color="emerald" size={12} title="I/O throughput in bytes per second" />
+              </div>
+            </th>
+            <th className="py-2 px-3 font-normal text-right">
+              <div className="inline-flex items-center justify-end gap-1 w-full">
+                <span>ERRS</span>
+                <MetricHelpButton metricId="err_syscalls_per_sec" color="rose" size={12} title="Failed I/O syscalls (ENOENT, EACCES)" />
+              </div>
+            </th>
           </tr>
         </thead>
         <tbody>

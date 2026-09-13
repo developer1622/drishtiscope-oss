@@ -2,6 +2,7 @@ import React from 'react';
 import { Snapshot, ProcessRow } from '../../types/protocol';
 import { KPITile } from '../KPITile';
 import { Panel } from '../Panel';
+import { MetricHelpButton } from '../MetricHelpModal';
 import { fmtBytes, fmtBps } from '../../utils/format';
 import {
   Cpu,
@@ -100,6 +101,7 @@ export function BasicTab({
               <h2 className="text-base font-bold text-txt">
                 Google SRE Golden Signals: {target?.comm || 'Target Process'}
               </h2>
+              <MetricHelpButton metricId="slo_availability" color="blue" size={14} title="Click to understand SRE Golden Signals & SLO Availability" />
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#34A853]/15 text-[#34A853] border border-[#34A853]/30 flex items-center gap-1 font-mono font-medium">
                 <CheckCircle2 size={11} /> SLO MET (99.9% TARGET)
               </span>
@@ -143,7 +145,10 @@ export function BasicTab({
               </div>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-mono uppercase text-muted">Error Budget Left</span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-mono uppercase text-muted">Error Budget Left</span>
+                <MetricHelpButton metricId="error_budget" color="emerald" size={11} title="Click to view Error Budget details" />
+              </div>
               <span className="text-sm font-bold font-mono text-txt">{errorBudget.toFixed(1)}%</span>
               <span className="text-[10px] font-mono text-[#34A853] flex items-center gap-0.5">
                 <TrendingUp size={10} /> 30-Day Healthy
@@ -154,7 +159,10 @@ export function BasicTab({
           <div className="w-px h-10 bg-border hidden sm:block" />
 
           <div className="flex flex-col text-right">
-            <span className="text-[10px] font-mono uppercase text-muted">Burn Rate</span>
+            <div className="flex items-center justify-end gap-1">
+              <span className="text-[10px] font-mono uppercase text-muted">Burn Rate</span>
+              <MetricHelpButton metricId="burn_rate" color="amber" size={11} title="Click to view Error Budget Burn Rate details" />
+            </div>
             <span className="text-sm font-bold font-mono text-amber flex items-center justify-end gap-1">
               <Flame size={12} className="text-amber" />
               {burnRate.toFixed(2)}x
@@ -169,20 +177,31 @@ export function BasicTab({
         {/* Signal 1: Latency */}
         <div className="bg-panel border border-border rounded-xl p-3.5 flex flex-col justify-between relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted">1. Latency (Kernel Quantiles)</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-medium text-muted">1. Latency (Kernel Quantiles)</span>
+              <MetricHelpButton metricId="p50_latency" color="cyan" size={12} title="Understand Syscall Latency Quantiles" />
+            </div>
             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan/15 text-cyan border border-cyan/30">
               µs
             </span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-bold font-mono text-txt">{p50.toFixed(1)}</span>
-            <span className="text-xs font-mono text-muted">P50</span>
-            <span className="text-xs font-mono text-txt ml-auto font-medium">
-              P99: <span className="text-cyan font-bold">{p99.toFixed(1)} µs</span>
-            </span>
+            <div className="inline-flex items-center gap-1">
+              <span className="text-xs font-mono text-muted">P50</span>
+              <MetricHelpButton metricId="p50_latency" color="blue" size={10} />
+            </div>
+            <div className="inline-flex items-center gap-1 ml-auto text-xs font-mono text-txt font-medium">
+              <span>P99:</span>
+              <span className="text-cyan font-bold">{p99.toFixed(1)} µs</span>
+              <MetricHelpButton metricId="p99_latency" color="rose" size={10} />
+            </div>
           </div>
           <div className="mt-2 pt-2 border-t border-border/50 flex items-center justify-between text-[11px] font-mono text-muted">
-            <span>P90: {p90.toFixed(1)} µs</span>
+            <div className="inline-flex items-center gap-1">
+              <span>P90: {p90.toFixed(1)} µs</span>
+              <MetricHelpButton metricId="p90_latency" color="purple" size={10} />
+            </div>
             <span className="text-green flex items-center gap-1">
               <CheckCircle2 size={11} /> In SLA (&lt;50µs)
             </span>
@@ -192,7 +211,10 @@ export function BasicTab({
         {/* Signal 2: Traffic */}
         <div className="bg-panel border border-border rounded-xl p-3.5 flex flex-col justify-between relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted">2. Traffic (Syscalls & Net)</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-medium text-muted">2. Traffic (Syscalls & Net)</span>
+              <MetricHelpButton metricId="syscalls_per_sec" color="blue" size={12} title="Understand Kernel Traffic & RPS" />
+            </div>
             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#4285F4]/15 text-[#4285F4] border border-[#4285F4]/30">
               RPS
             </span>
@@ -202,17 +224,27 @@ export function BasicTab({
               {Math.round(kpis?.syscalls_per_sec || 0).toLocaleString()}
             </span>
             <span className="text-xs font-mono text-muted">sys/s</span>
+            <MetricHelpButton metricId="syscalls_per_sec" color="cyan" size={10} />
           </div>
           <div className="mt-2 pt-2 border-t border-border/50 flex items-center justify-between text-[11px] font-mono text-muted">
-            <span>Net: {net}</span>
-            <span>Disk: {disk}</span>
+            <div className="inline-flex items-center gap-1">
+              <span>Net: {net}</span>
+              <MetricHelpButton metricId="net_throughput" color="emerald" size={10} />
+            </div>
+            <div className="inline-flex items-center gap-1">
+              <span>Disk: {disk}</span>
+              <MetricHelpButton metricId="disk_io" color="amber" size={10} />
+            </div>
           </div>
         </div>
 
         {/* Signal 3: Errors */}
         <div className="bg-panel border border-border rounded-xl p-3.5 flex flex-col justify-between relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted">3. Errors (Kernel Ret &lt; 0)</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-medium text-muted">3. Errors (Kernel Ret &lt; 0)</span>
+              <MetricHelpButton metricId="err_syscalls_per_sec" color="rose" size={12} title="Understand Syscall Errors" />
+            </div>
             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose/15 text-rose border border-rose/30">
               Err/s
             </span>
@@ -222,9 +254,11 @@ export function BasicTab({
               {(kpis?.err_syscalls_per_sec || 0).toFixed(2)}
             </span>
             <span className="text-xs font-mono text-muted">err/s</span>
-            <span className="text-xs font-mono text-txt ml-auto">
-              Avail: <span className="text-green font-bold">{sloAvail.toFixed(2)}%</span>
-            </span>
+            <MetricHelpButton metricId="err_syscalls_per_sec" color="rose" size={10} />
+            <div className="inline-flex items-center gap-1 ml-auto text-xs font-mono text-txt">
+              <span>Avail: <span className="text-green font-bold">{sloAvail.toFixed(2)}%</span></span>
+              <MetricHelpButton metricId="slo_availability" color="emerald" size={10} />
+            </div>
           </div>
           <div className="mt-2 pt-2 border-t border-border/50 flex items-center justify-between text-[11px] font-mono text-muted">
             <span>Ratio: {((kpis?.err_syscalls_per_sec || 0) / Math.max(1, kpis?.syscalls_per_sec || 1) * 100).toFixed(3)}%</span>
@@ -235,7 +269,10 @@ export function BasicTab({
         {/* Signal 4: Saturation */}
         <div className="bg-panel border border-border rounded-xl p-3.5 flex flex-col justify-between relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted">4. Saturation (CPU & Runqueue)</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-medium text-muted">4. Saturation (CPU & Runqueue)</span>
+              <MetricHelpButton metricId="saturation" color="amber" size={12} title="Understand Resource Saturation" />
+            </div>
             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber/15 text-amber border border-amber/30">
               Wait
             </span>
@@ -245,12 +282,17 @@ export function BasicTab({
               {(kpis?.cpu_pct || 0).toFixed(1)}
             </span>
             <span className="text-xs font-mono text-muted">% CPU</span>
-            <span className="text-xs font-mono text-txt ml-auto">
-              FDs: <span className="text-amber font-bold">{kpis?.open_fds || 0}/1024</span>
-            </span>
+            <MetricHelpButton metricId="cpu_pct" color="cyan" size={10} />
+            <div className="inline-flex items-center gap-1 ml-auto text-xs font-mono text-txt">
+              <span>FDs: <span className="text-amber font-bold">{kpis?.open_fds || 0}/1024</span></span>
+              <MetricHelpButton metricId="open_fds" color="amber" size={10} />
+            </div>
           </div>
           <div className="mt-2 pt-2 border-t border-border/50 flex items-center justify-between text-[11px] font-mono text-muted">
-            <span>Runqueue Lat: {runqueueLat.toFixed(2)} µs</span>
+            <div className="inline-flex items-center gap-1">
+              <span>Runqueue Lat: {runqueueLat.toFixed(2)} µs</span>
+              <MetricHelpButton metricId="runqueue_latency" color="blue" size={10} />
+            </div>
             <span className="text-green">Headroom 81%</span>
           </div>
         </div>
@@ -263,6 +305,8 @@ export function BasicTab({
           className="lg:col-span-2"
           title="Monarch Vitals: Synchronized Traffic vs Latency Waveform"
           subtitle="Real-time 60-second correlation between Syscall Traffic (RPS) and Kernel Execution P99 Latency (µs)"
+          helpMetricId="p99_latency"
+          helpColor="amber"
         >
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -332,42 +376,62 @@ export function BasicTab({
         <Panel
           title={`Target Identity: ${targetProcess?.comm || target?.comm || 'agy'}`}
           subtitle="Kernel procfs & scheduler telemetry"
+          helpMetricId="pid"
+          helpColor="blue"
         >
           <div className="flex flex-col gap-3 text-xs">
             <div className="bg-panel2 rounded-lg p-3 border border-border flex items-center justify-between">
               <div>
-                <div className="text-muted text-[10px] font-mono uppercase">Target PID & Comm</div>
+                <div className="text-muted text-[10px] font-mono uppercase flex items-center gap-1">
+                  <span>Target PID & Comm</span>
+                  <MetricHelpButton metricId="pid" color="blue" size={11} />
+                </div>
                 <div className="text-sm font-bold font-mono text-txt mt-0.5">
                   {targetProcess?.comm || target?.comm || 'agy'}{' '}
                   <span className="text-cyan font-normal">(PID {targetProcess?.pid || target?.pid || 0})</span>
                 </div>
               </div>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-green/15 text-green border border-green/30">
-                STATE {targetProcess?.state || 'R'}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-green/15 text-green border border-green/30">
+                  STATE {targetProcess?.state || 'R'}
+                </span>
+                <MetricHelpButton metricId="process_state" color="emerald" size={11} />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-panel2 p-2.5 rounded-lg border border-border">
-                <span className="text-muted text-[10px] font-mono">TGID / PPID</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted text-[10px] font-mono">TGID / PPID</span>
+                  <MetricHelpButton metricId="pid" color="blue" size={10} />
+                </div>
                 <div className="text-xs font-mono text-txt mt-0.5">
                   {targetProcess?.tgid || 0} / {targetProcess?.ppid || 1}
                 </div>
               </div>
               <div className="bg-panel2 p-2.5 rounded-lg border border-border">
-                <span className="text-muted text-[10px] font-mono">Active Threads</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted text-[10px] font-mono">Active Threads</span>
+                  <MetricHelpButton metricId="threads" color="blue" size={10} />
+                </div>
                 <div className="text-xs font-mono text-txt mt-0.5">
                   {targetProcess?.threads || kpis?.threads || 1} tasks
                 </div>
               </div>
               <div className="bg-panel2 p-2.5 rounded-lg border border-border">
-                <span className="text-muted text-[10px] font-mono">Resident RSS</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted text-[10px] font-mono">Resident RSS</span>
+                  <MetricHelpButton metricId="rss_bytes" color="purple" size={10} />
+                </div>
                 <div className="text-xs font-mono text-txt mt-0.5">
                   {fmtBytes(targetProcess?.rss_bytes || kpis?.rss_bytes || 0)}
                 </div>
               </div>
               <div className="bg-panel2 p-2.5 rounded-lg border border-border">
-                <span className="text-muted text-[10px] font-mono">Virtual Size (VMS)</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted text-[10px] font-mono">Virtual Size (VMS)</span>
+                  <MetricHelpButton metricId="vms_bytes" color="purple" size={10} />
+                </div>
                 <div className="text-xs font-mono text-txt mt-0.5">
                   {fmtBytes(targetProcess?.vms_bytes || (kpis?.rss_bytes || 0) * 4)}
                 </div>
@@ -382,8 +446,14 @@ export function BasicTab({
             </div>
 
             <div className="flex items-center justify-between text-[11px] font-mono text-muted pt-1">
-              <span>Context Switches: {targetProcess?.ctx_switches?.toLocaleString() || '142,801'}</span>
-              <span>Open FDs: {targetProcess?.open_fds || kpis?.open_fds || 42}</span>
+              <div className="inline-flex items-center gap-1">
+                <span>Context Switches: {targetProcess?.ctx_switches?.toLocaleString() || '142,801'}</span>
+                <MetricHelpButton metricId="ctx_switches" color="blue" size={10} />
+              </div>
+              <div className="inline-flex items-center gap-1">
+                <span>Open FDs: {targetProcess?.open_fds || kpis?.open_fds || 42}</span>
+                <MetricHelpButton metricId="open_fds" color="amber" size={10} />
+              </div>
             </div>
           </div>
         </Panel>

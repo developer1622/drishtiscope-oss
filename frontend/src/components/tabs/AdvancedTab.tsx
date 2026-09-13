@@ -1,6 +1,7 @@
 import React from 'react';
 import { Snapshot } from '../../types/protocol';
 import { Panel } from '../Panel';
+import { MetricHelpButton } from '../MetricHelpModal';
 import { fmtBytes, fmtBps } from '../../utils/format';
 import {
   PieChart,
@@ -157,6 +158,7 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#4285F4]" />
             <h2 className="text-sm font-bold text-txt font-mono">Google Cloud Monitoring: MQL Query Editor</h2>
+            <MetricHelpButton metricId="mql_query" color="blue" size={13} title="Google Cloud Monitoring MQL Query Engine" />
             <span className="text-[10px] px-2 py-0.5 rounded bg-panel2 text-muted border border-border font-mono">
               Monarch TSDB
             </span>
@@ -204,7 +206,10 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
               <Cpu size={20} />
             </div>
             <div>
-              <div className="text-xs text-muted font-mono uppercase">Kernel Sched Latency</div>
+              <div className="text-xs text-muted font-mono uppercase flex items-center gap-1">
+                <span>Kernel Sched Latency</span>
+                <MetricHelpButton metricId="runqueue_latency" color="cyan" size={11} />
+              </div>
               <div className="text-lg font-bold font-mono text-txt">1.42 µs</div>
             </div>
           </div>
@@ -219,7 +224,10 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
               <HardDrive size={20} />
             </div>
             <div>
-              <div className="text-xs text-muted font-mono uppercase">Page Faults / sec</div>
+              <div className="text-xs text-muted font-mono uppercase flex items-center gap-1">
+                <span>Page Faults / sec</span>
+                <MetricHelpButton metricId="page_faults" color="emerald" size={11} />
+              </div>
               <div className="text-lg font-bold font-mono text-txt">2.8 /s</div>
             </div>
           </div>
@@ -234,7 +242,10 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
               <Network size={20} />
             </div>
             <div>
-              <div className="text-xs text-muted font-mono uppercase">Socket Drop Rate</div>
+              <div className="text-xs text-muted font-mono uppercase flex items-center gap-1">
+                <span>Socket Drop Rate</span>
+                <MetricHelpButton metricId="dropped_events" color="amber" size={11} />
+              </div>
               <div className="text-lg font-bold font-mono text-txt">0.00%</div>
             </div>
           </div>
@@ -250,6 +261,8 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
         <Panel
           title="Syscall Category Distribution"
           subtitle="Proportional workload by Linux syscall subsystem"
+          helpMetricId="syscalls_per_sec"
+          helpColor="cyan"
         >
           <div className="h-64 w-full flex flex-col sm:flex-row items-center justify-center">
             <div className="h-full w-full sm:w-1/2">
@@ -297,6 +310,8 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
         <Panel
           title="Memory Subsystem Breakdown"
           subtitle="Resident RSS vs Page Cache vs Shared Libs (MB)"
+          helpMetricId="rss_bytes"
+          helpColor="purple"
         >
           <div className="h-64 w-full flex flex-col sm:flex-row items-center justify-center">
             <div className="h-full w-full sm:w-1/2">
@@ -347,6 +362,8 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
         <Panel
           title="Disk Block Throughput & IOPS"
           subtitle="Read KB/s vs Write KB/s (bars) + IOPS overlay (line)"
+          helpMetricId="disk_io"
+          helpColor="emerald"
         >
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -376,6 +393,8 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
         <Panel
           title="Kernel Context Switches & Threads"
           subtitle="Scheduling pressure & voluntary context switch rate"
+          helpMetricId="ctx_switches"
+          helpColor="blue"
         >
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -404,6 +423,8 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
       <Panel
         title="TCP Socket State Spectrum"
         subtitle="Active connections mapped by kernel TCP FSM state"
+        helpMetricId="tcp_state"
+        helpColor="amber"
       >
         <div className="h-32 w-full">
           <ResponsiveContainer width="100%" height="100%">

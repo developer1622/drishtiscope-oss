@@ -5,6 +5,7 @@ import { OverlayChart } from '../OverlayChart';
 import { SyscallBar } from '../SyscallBar';
 import { ProcessTable } from '../ProcessTable';
 import { KPITile } from '../KPITile';
+import { MetricHelpButton } from '../MetricHelpModal';
 import { fmtBytes, fmtBps } from '../../utils/format';
 import {
   Cpu,
@@ -72,35 +73,47 @@ export function MediumTab({
           icon={<Cpu size={14} />}
           color="#3ce0cf"
           sparkData={cpuSpark}
+          metricId="cpu_pct"
+          helpColor="cyan"
         />
         <KPITile
           label="Threads"
           value={kpis?.threads || 0}
           icon={<GitMerge size={14} />}
           color="#e8edf5"
+          metricId="threads"
+          helpColor="blue"
         />
         <KPITile
           label="RSS"
           value={rss.split(' ')[0]}
           unit={rss.split(' ')[1]}
           color="#e8edf5"
+          metricId="rss_bytes"
+          helpColor="purple"
         />
         <KPITile
           label="Open FDs"
           value={kpis?.open_fds || 0}
           icon={<FileDigit size={14} />}
+          metricId="open_fds"
+          helpColor="amber"
         />
         <KPITile
           label="Syscalls"
           value={Math.round(kpis?.syscalls_per_sec || 0).toLocaleString()}
           unit="/s"
           color="#e8edf5"
+          metricId="syscalls_per_sec"
+          helpColor="cyan"
         />
         <KPITile
           label="Errors"
           value={(kpis?.err_syscalls_per_sec || 0).toFixed(2)}
           unit="/s"
           color="#ff5d73"
+          metricId="err_syscalls_per_sec"
+          helpColor="rose"
         />
         <KPITile
           label="Net I/O"
@@ -108,6 +121,8 @@ export function MediumTab({
           unit={net.split(' ')[1]}
           icon={<Network size={14} />}
           color="#f5b942"
+          metricId="net_throughput"
+          helpColor="emerald"
         />
         <KPITile
           label="Disk I/O"
@@ -115,6 +130,8 @@ export function MediumTab({
           unit={disk.split(' ')[1]}
           icon={<HardDrive size={14} />}
           color="#3dd68c"
+          metricId="disk_io"
+          helpColor="amber"
         />
       </div>
 
@@ -122,6 +139,8 @@ export function MediumTab({
       <Panel
         title="Google Cloud Profiler: CPU Stack Frame Breakdown"
         subtitle="Continuous low-overhead eBPF CPU instruction sampling & execution call tree"
+        helpMetricId="flamegraph_cpu"
+        helpColor="cyan"
         action={
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-muted font-mono hidden sm:inline">Sampling Rate: 100Hz</span>
@@ -180,6 +199,8 @@ export function MediumTab({
       <Panel
         title="Perfetto Kernel Trace Timeline"
         subtitle="Multi-lane timeline of asynchronous kernel syscalls, sockets, and task scheduler events"
+        helpMetricId="perfetto_trace"
+        helpColor="purple"
         action={
           <div className="flex items-center gap-2">
             {/* Filter buttons */}
@@ -270,6 +291,8 @@ export function MediumTab({
           className="lg:col-span-3"
           title="System Metrics Waveform"
           subtitle="60s synchronized CPU, Storage, and Network waveforms"
+          helpMetricId="cpu_pct"
+          helpColor="cyan"
         >
           {snapshot && (
             <OverlayChart
@@ -284,6 +307,8 @@ export function MediumTab({
           className="lg:col-span-2"
           title="Top System Calls"
           subtitle="Active execution distribution"
+          helpMetricId="syscalls_per_sec"
+          helpColor="cyan"
         >
           <SyscallBar syscalls={snapshot?.syscalls_top || []} />
         </Panel>
@@ -293,6 +318,8 @@ export function MediumTab({
       <Panel
         title="Active Linux Process Hierarchy"
         subtitle="Live /proc and eBPF aggregated process state"
+        helpMetricId="pid"
+        helpColor="blue"
       >
         <ProcessTable
           processes={snapshot?.processes || []}

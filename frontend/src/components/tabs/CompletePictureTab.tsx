@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Snapshot, EventRow } from '../../types/protocol';
 import { Panel } from '../Panel';
+import { MetricHelpButton } from '../MetricHelpModal';
 import { fmtBytes, fmtBps } from '../../utils/format';
 import { apiHeaders } from '../../utils/api';
 import {
@@ -90,6 +91,7 @@ export function CompletePictureTab({
               <h2 className="text-base font-bold text-txt">
                 Full-Spectrum Autonomous Agent Telemetry: {targetComm}
               </h2>
+              <MetricHelpButton metricId="ai_workload_radar" color="purple" size={14} title="What is Full-Spectrum Autonomous Agent Telemetry?" />
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-cyan/15 text-cyan border border-cyan/30 font-mono">
                 Level 4 Architecture
               </span>
@@ -125,6 +127,8 @@ export function CompletePictureTab({
         <Panel
           title="AI Agent Workload Profile (Radar)"
           subtitle={`Multi-dimensional footprint of ${targetComm} vs standard Linux daemon`}
+          helpMetricId="ai_workload_radar"
+          helpColor="purple"
         >
           <div className="h-64 w-full flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
@@ -152,6 +156,8 @@ export function CompletePictureTab({
         <Panel
           title="Security & Kernel Denial Trends"
           subtitle="EACCES violations, blocked connect() calls & sensitive procfs touches"
+          helpMetricId="chronicle_security"
+          helpColor="rose"
         >
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -424,6 +430,8 @@ export function CompletePictureTab({
       <Panel
         title="Google Cloud Logging: Structured Kernel Log Explorer"
         subtitle="Chronicle Security audit telemetry & JSON LogEntry records"
+        helpMetricId="chronicle_security"
+        helpColor="rose"
         action={
           <div className="flex items-center gap-2">
             <div className="flex items-center bg-panel2 border border-border rounded-lg p-0.5 text-[10px] font-mono">
@@ -529,20 +537,62 @@ export function CompletePictureTab({
       <Panel
         title="SQLite TSDB Persistent Telemetry Explorer"
         subtitle={`Historical records persisted in drishtiscope.db (${historyPoints.length} snapshots loaded)`}
+        helpMetricId="sqlite_tsdb"
+        helpColor="amber"
       >
         <div className="w-full overflow-x-auto max-h-56">
           <table className="w-full text-xs font-mono border-collapse">
             <thead>
               <tr className="text-muted border-b border-border bg-panel2 text-left sticky top-0">
-                <th className="py-2 px-3">RECORD ID</th>
+                <th className="py-2 px-3">
+                  <div className="inline-flex items-center gap-1">
+                    <span>RECORD ID</span>
+                    <MetricHelpButton metricId="sqlite_tsdb" color="amber" size={11} />
+                  </div>
+                </th>
                 <th className="py-2 px-3">TIMESTAMP</th>
-                <th className="py-2 px-3">TARGET</th>
-                <th className="py-2 px-3 text-right">CPU %</th>
-                <th className="py-2 px-3 text-right">THREADS</th>
-                <th className="py-2 px-3 text-right">RSS</th>
-                <th className="py-2 px-3 text-right">SYSCALLS/S</th>
-                <th className="py-2 px-3 text-right">NET BPS</th>
-                <th className="py-2 px-3 text-right">DISK BPS</th>
+                <th className="py-2 px-3">
+                  <div className="inline-flex items-center gap-1">
+                    <span>TARGET</span>
+                    <MetricHelpButton metricId="pid" color="blue" size={11} />
+                  </div>
+                </th>
+                <th className="py-2 px-3 text-right">
+                  <div className="inline-flex items-center justify-end gap-1 w-full">
+                    <span>CPU %</span>
+                    <MetricHelpButton metricId="cpu_pct" color="cyan" size={11} />
+                  </div>
+                </th>
+                <th className="py-2 px-3 text-right">
+                  <div className="inline-flex items-center justify-end gap-1 w-full">
+                    <span>THREADS</span>
+                    <MetricHelpButton metricId="threads" color="blue" size={11} />
+                  </div>
+                </th>
+                <th className="py-2 px-3 text-right">
+                  <div className="inline-flex items-center justify-end gap-1 w-full">
+                    <span>RSS</span>
+                    <MetricHelpButton metricId="rss_bytes" color="purple" size={11} />
+                  </div>
+                </th>
+                <th className="py-2 px-3 text-right">
+                  <div className="inline-flex items-center justify-end gap-1 w-full">
+                    <span>SYSCALLS/S</span>
+                    <MetricHelpButton metricId="syscalls_per_sec" color="cyan" size={11} />
+                  </div>
+                </th>
+                <th className="py-2 px-3 text-right">
+                  <div className="inline-flex items-center justify-end gap-1 w-full">
+                    <span>NET BPS</span>
+                    <MetricHelpButton metricId="net_throughput" color="amber" size={11} />
+                  </div>
+                </th>
+                <th className="py-2 px-3 text-right">
+                  <div className="inline-flex items-center justify-end gap-1 w-full">
+                    <span>DISK BPS</span>
+                    <MetricHelpButton metricId="disk_io" color="emerald" size={11} />
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>

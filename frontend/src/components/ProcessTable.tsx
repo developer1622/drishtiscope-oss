@@ -3,6 +3,7 @@ import { ProcessRow } from '../types/protocol';
 import { fmtPct, fmtBytes, padPid } from '../utils/format';
 import { Badge } from './Badge';
 import { Crosshair } from 'lucide-react';
+import { MetricHelpButton } from './MetricHelpModal';
 
 export function ProcessTable({
   processes,
@@ -31,13 +32,48 @@ export function ProcessTable({
       <table className="w-full border-collapse">
         <thead>
           <tr className="text-muted border-b border-border text-xs sticky top-0 bg-panel z-10">
-            <th className="py-2 px-3 font-normal text-right">PID</th>
-            <th className="py-2 px-3 font-normal">COMM</th>
-            <th className="py-2 px-3 font-normal text-right">CPU%</th>
-            <th className="py-2 px-3 font-normal text-right">RSS</th>
-            <th className="py-2 px-3 font-normal text-right">THR</th>
-            <th className="py-2 px-3 font-normal text-right">FDS</th>
-            <th className="py-2 px-3 font-normal text-center">ST</th>
+            <th className="py-2 px-3 font-normal text-right">
+              <span className="inline-flex items-center gap-1">
+                <span>PID</span>
+                <MetricHelpButton metricId="pid" color="blue" size={11} />
+              </span>
+            </th>
+            <th className="py-2 px-3 font-normal">
+              <span className="inline-flex items-center gap-1">
+                <span>COMM</span>
+                <MetricHelpButton metricId="comm" color="cyan" size={11} />
+              </span>
+            </th>
+            <th className="py-2 px-3 font-normal text-right">
+              <span className="inline-flex items-center gap-1">
+                <span>CPU%</span>
+                <MetricHelpButton metricId="cpu_pct" color="cyan" size={11} />
+              </span>
+            </th>
+            <th className="py-2 px-3 font-normal text-right">
+              <span className="inline-flex items-center gap-1">
+                <span>RSS</span>
+                <MetricHelpButton metricId="rss_bytes" color="purple" size={11} />
+              </span>
+            </th>
+            <th className="py-2 px-3 font-normal text-right">
+              <span className="inline-flex items-center gap-1">
+                <span>THR</span>
+                <MetricHelpButton metricId="threads" color="blue" size={11} />
+              </span>
+            </th>
+            <th className="py-2 px-3 font-normal text-right">
+              <span className="inline-flex items-center gap-1">
+                <span>FDS</span>
+                <MetricHelpButton metricId="open_fds" color="amber" size={11} />
+              </span>
+            </th>
+            <th className="py-2 px-3 font-normal text-center">
+              <span className="inline-flex items-center gap-1">
+                <span>ST</span>
+                <MetricHelpButton metricId="process_state" color="emerald" size={11} />
+              </span>
+            </th>
             <th className="py-2 px-3 font-normal text-center">ACTION</th>
           </tr>
         </thead>

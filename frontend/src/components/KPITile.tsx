@@ -1,11 +1,50 @@
 import React, { ReactNode } from 'react';
 import { Sparkline } from './Sparkline';
+import { MetricHelpButton } from './MetricHelpModal';
 
-export function KPITile({ label, value, unit, delta, sparkData, color = '#3dd68c', icon }: { label: string, value: string | number, unit?: string, delta?: number, sparkData?: number[], color?: string, icon?: ReactNode }) {
+export function KPITile({
+  label,
+  value,
+  unit,
+  delta,
+  sparkData,
+  color = '#3dd68c',
+  icon,
+  metricId,
+  helpColor,
+}: {
+  label: string;
+  value: string | number;
+  unit?: string;
+  delta?: number;
+  sparkData?: number[];
+  color?: string;
+  icon?: ReactNode;
+  metricId?: string;
+  helpColor?: 'cyan' | 'blue' | 'emerald' | 'amber' | 'rose' | 'purple';
+}) {
   return (
     <div className="bg-panel border border-border rounded-xl p-4 flex flex-col justify-between min-w-[150px] flex-1 relative overflow-hidden group">
       <div className="flex justify-between items-start mb-2">
-        <span className="text-muted text-sm font-medium">{label}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-muted text-sm font-medium">{label}</span>
+          {metricId && (
+            <MetricHelpButton
+              metricId={metricId}
+              color={
+                helpColor ||
+                (color === '#3ce0cf'
+                  ? 'cyan'
+                  : color === '#ff5d73' || color === '#EA4335'
+                  ? 'rose'
+                  : color === '#f5b942' || color === '#FBBC04'
+                  ? 'amber'
+                  : 'emerald')
+              }
+              size={13}
+            />
+          )}
+        </div>
         {icon && <span className="text-muted opacity-50">{icon}</span>}
       </div>
       
