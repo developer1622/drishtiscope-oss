@@ -1,0 +1,88 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #07080d;
+  --color-panel: #0e1118;
+  --color-panel2: #12151e;
+  --color-border: #1e2430;
+  --color-txt: #e8edf5;
+  --color-muted: #8b95a8;
+  --color-cyan: #3ce0cf;
+  --color-green: #3dd68c;
+  --color-amber: #f5b942;
+  --color-rose: #ff5d73;
+  color-scheme: dark;
+}
+
+html.light {
+  --color-bg: #f8fafc;
+  --color-panel: #ffffff;
+  --color-panel2: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-txt: #0f172a;
+  --color-muted: #64748b;
+  --color-cyan: #0284c7;
+  --color-green: #16a34a;
+  --color-amber: #d97706;
+  --color-rose: #e11d48;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+body {
+  background-color: var(--color-bg);
+  color: var(--color-txt);
+  font-family: 'Inter', system-ui, sans-serif;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-muted); }
+
+/* Pulse dot animation */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.pulse-dot { animation: pulse-dot 1.8s ease-in-out infinite; }
+
+/* Shimmer skeleton */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--color-panel) 25%, var(--color-panel2) 50%, var(--color-panel) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* Critical error glow */
+@keyframes crit-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 93, 115, 0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(255, 93, 115, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 93, 115, 0); }
+}
+.crit-pulse { animation: crit-pulse 1.2s ease-out; }
+
+/* Transitions */
+.bar-fill {
+  transition: width 0.4s ease-out;
+}
+:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 2px;
+}

@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+project_name: drishtiscope
+
+before:
+  hooks:
+    - npm --prefix ./frontend run build
+
+builds:
+  - id: drishtiscope
+    dir: ./backend
+    main: ./cmd/agentscope
+    binary: drishtiscope
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/agentscope/agentscope/internal/protocol.Product=DrishtiScope
+      - -X github.com/agentscope/agentscope/internal/protocol.Version={{.Version}}
+      - -X github.com/agentscope/agentscope/internal/protocol.Commit={{.Commit}}
+      - -X github.com/agentscope/agentscope/internal/protocol.Date={{.Date}}
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+      - SECURITY.md
+      - frontend/dist/**
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-snapshot"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

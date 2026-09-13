@@ -1,0 +1,27 @@
+# binaries
+/agentscope
+/backend/agentscope
+*.exe
+*.test
+*.out
+
+# frontend
+frontend/node_modules/
+frontend/dist/
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.log
+
+# env
+.env
+.env.local
+
+# bpf2go generated (we vendor a prebuilt object instead)
+backend/internal/ebpfagent/agent_bpfel.go
+backend/internal/ebpfagent/agent_bpfel.o
+backend/internal/ebpfagent/agent_bpfeb.go
+backend/internal/ebpfagent/agent_bpfeb.o
