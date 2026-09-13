@@ -1,22 +1,130 @@
 # DrishtiScope (दृष्टिScope)
 
-> **Sanskrit: दृष्टि (Drishti — Insight, Clear Vision, Perception) + English: Scope (Observatory Instrument)**  
-> **Google Cloud Operations & SRE Caliber Linux Kernel & Autonomous AI Agent Observability Platform**  
-> *Powered by eBPF, Embedded SQLite TSDB, Google Monarch / Prometheus Metrics, Perfetto Trace Exporter, and Cloud Logging.*
+<div align="center">
 
-![DrishtiScope Google Cloud SRE Console](results/screenshots/drishtiscope_google_sre.jpg)
+> **Sanskrit: दृष्टि (Drishti — Insight, Clear Seeing, Perception) + English: Scope (Observatory Instrument)**  
+> **The Real-Time SRE Control Room for Autonomous AI Agents & LLM Runtimes.**  
+> *Kernel-grounded process observability for coding agents and AI runtimes — without an SDK, without a proxy, without sending telemetry to the cloud.*
+
+[![CI](https://github.com/drishtiscope/drishtiscope/actions/workflows/ci.yml/badge.svg)](https://github.com/drishtiscope/drishtiscope/actions/workflows/ci.yml)
+[![Docker](https://github.com/drishtiscope/drishtiscope/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/drishtiscope/drishtiscope/actions/workflows/docker-publish.yml)
+[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go)](https://go.dev)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react)](https://react.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Release](https://img.shields.io/badge/Single_Binary-~18_MB-blue.svg)](https://github.com/drishtiscope/drishtiscope/releases)
+[![Dual-Engine](https://img.shields.io/badge/Engine-eBPF_%2B_Real_/proc-cyan.svg)](docs/ARCHITECTURE.md)
+
+</div>
 
 ---
 
-## 🚀 Live Status (Running Now)
+## 📹 DrishtiScope Showcase Video
 
-DrishtiScope is running locally in WSL2 Ubuntu in the background:
-- **Google Cloud Console UI**: [http://localhost:5173](http://localhost:5173) (Vite Dev with HMR) or [http://localhost:8080](http://localhost:8080) (Production Single-Binary)
-- **Monarch / Prometheus Metrics**: [http://localhost:8080/metrics](http://localhost:8080/metrics) (OpenMetrics standard format)
-- **Google Borg / Kubernetes Probes**: [http://localhost:8080/healthz](http://localhost:8080/healthz), [http://localhost:8080/livez](http://localhost:8080/livez), [http://localhost:8080/readyz](http://localhost:8080/readyz)
-- **Perfetto Trace Event Exporter**: [http://localhost:8080/api/v1/traces/perfetto](http://localhost:8080/api/v1/traces/perfetto) (compatible with [ui.perfetto.dev](https://ui.perfetto.dev))
-- **Google Cloud Logging Exporter**: [http://localhost:8080/api/v1/logs](http://localhost:8080/api/v1/logs) (structured `LogEntry` array with severity)
-- **Embedded Database**: Zero-dependency SQLite TSDB with passive WAL checkpointing at `drishtiscope.db`
+Watch the **1080p 60fps Full Walkthrough** of DrishtiScope observing an active autonomous pair-programming agent (`agy` PID 113971), navigating the 5 tabs, testing the 5 themes, and exploring the Junior Admin Metric Encyclopedia:
+
+> 🎬 **Direct Video Downloads**:
+> - **MP4 Video (H.264)**: [videos/drishtiscope_showcase.mp4](videos/drishtiscope_showcase.mp4) (6.5 MB, Full HD 1080p, 60fps)
+> - **WebM Video (VP9)**: [videos/drishtiscope_showcase.webm](videos/drishtiscope_showcase.webm) (6.9 MB)
+
+---
+
+## 🧭 The Gap Nobody in LLMOps Owns
+
+Almost every tool marketed as "AI agent observability" in 2026 watches **what the application logged**. That is a useful layer, but it is **not the same layer as what the process actually did**.
+
+An autonomous coding agent (`codex`, Claude Code, `agy`, Copilot, Grok, Ollama) does not behave like a standard microservice:
+
+| Agent Behavior | What Application Tracers See | What DrishtiScope Sees (Kernel + /proc) |
+| :--- | :--- | :--- |
+| Spawns `bash`, `git`, `docker`, `python` in rapid bursts | A "tool call" span, *if* the SDK logged it | Exact child PIDs, PPID tree, cmdline, open FDs |
+| Streams tokens over long-lived TLS connections | Latency and token count, *if* client was wrapped | `ESTABLISHED` sockets, TX/RX throughput, P99 syscall latency |
+| Rewrites workspace files, touches SQLite, updates WAL | Nothing, unless the tool span logged paths | Real `openat`/`write` descriptors, active file locks |
+| Sits in `epoll_wait` / `futex` between turns | "Idle" only if the application reported it | Runqueue latency, CPU %, syscall mix, stall vs wait |
+| Hits `EACCES` on `/etc/shadow` or refused connect | Typically nothing | Security audit events, error rate, error budget burn |
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  LAYER A — Application / SDK  ("what the agent said it did")             │
+│  LangSmith · Langfuse · Phoenix · Braintrust · Helicone · AgentOps       │
+│  Needs: SDK, decorator, gateway, or vendor plugin                        │
+│  Misses: child processes, syscalls, /proc, real sockets, kernel stalls   │
+└────────────────────────────────────┬─────────────────────────────────────┘
+                                     │
+                                     ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  LAYER B — Generic kernel / eBPF APM  ("what the machine did")           │
+│  Pixie · Coroot · Grafana Beyla · Groundcover · Tetragon · Falco         │
+│  Needs: cluster / root / DaemonSet, not agent-aware                      │
+│  Misses: agent identity, process story, single-binary laptop use         │
+└────────────────────────────────────┬─────────────────────────────────────┘
+                                     │
+                                     ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  LAYER C — System-level agent observability  ("what THIS agent did")     │
+│  DrishtiScope  →  SRE control room · eBPF + /proc · golden signals       │
+│  Needs: zero instrumentation, attach to live PID or comm                 │
+│  Sees: host effects of closed-source agents with SRE semantics           │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+For the complete competitive analysis and positioning matrix against 40+ industry tools, see the [DrishtiScope USP Brief](usp.md).
+
+---
+
+## 🌟 Key Features
+
+### 1. Dual-Engine Architecture: eBPF + Zero-Root Real Mode
+- **eBPF Mode (`mode=ebpf`)**: Loads in-kernel tracepoints (`raw_syscalls:sys_enter`, `sys_exit`, `sched_process_exec`) for nanosecond latency profiling.
+- **Zero-Root Real Mode (`mode=real`)**: Works immediately on locked-down laptops, enterprise workstations, and WSL2 without root or sudo. Polls `/proc/[pid]/*` and host sysfs interfaces to measure CPU ticks, memory, open files, network flows, and scheduler latency.
+- **Auto Mode (`mode=auto`, default)**: Automatically detects kernel permissions; attaches eBPF if privileged, otherwise falls back gracefully to Real Mode with zero synthetic mock data.
+
+### 2. 5 Dedicated Observability Tabs
+- **Tab 1: Process Story (`Activity`)**: Chronological event feed, file touches, socket connections, and live AI Executive Verdict (*Active Code Generation*, *High I/O & Socket Activity*, *Idle Event Loop*). Includes one-click copyable Linux diagnostics (`strace`, `pidstat`, `lsof`).
+- **Tab 2: Overview (`Vitals`)**: Core SRE Golden Signals: Syscall latency quantiles (P50, P90, P99), traffic waveform, active threads, open FDs, and SLO error budget burn rate.
+- **Tab 3: Execution & CPU (`Call Trees`)**: Continuous flamegraph profiler, call tree drill-downs, and single-click export to [ui.perfetto.dev](https://ui.perfetto.dev).
+- **Tab 4: System Metrics (`Telemetry`)**: Metrics Query Language (MQL) console, subsystem breakdown donut charts (CPU, Memory, Disk, Network), and physical disk IOPS graphs.
+- **Tab 5: Security & Logs (`Audit`)**: AI Workload Security Radar, permission denial audits (`EACCES`, `EPERM`), refused outbound connections, and structured runtime logs.
+
+### 3. 5 Ergonomic Themes (Light Mode Default)
+Switch between 5 themes instantly from the top header:
+- **☀️ Light Mode (Default)**: Clean, high-contrast palette with soft slate borders (`#f8fafc` background, `#0f172a` text). Optimized for bright daytime environments and reading comfort.
+- **🌙 Dark Mode**: Classic nocturnal control room palette (`#07080d` background, `#0e1118` panels, cyan/emerald accents).
+- **🟠 Ubuntu Mode**: Canonical-inspired warm aubergine (`#2c001e` background, `#dd4814` orange accents).
+- **📟 Unix Mode**: Retro green-screen terminal aesthetic (`#0a0f0d` background, `#00ff66` phosphor accents).
+- **🔮 Purple Mode**: Cyber synthwave neon aesthetic (`#0d0b18` background, `#a855f7` violet accents).
+
+### 4. Anti-Flicker & Stream Rate Controls
+High-frequency streams can strain an engineer's eyes. DrishtiScope provides:
+- **Stream Rate Throttling**: Choose between `500ms` (Rapid), `1s` (Balanced), `2s` (Calm default), `5s` (Relaxed), or `Manual`.
+- **Anti-Flicker Toggle**: Dampens rapid numerical jitter and suppresses abrupt pulse animations.
+- **Live / Paused Freeze**: Pause the stream at any millisecond to inspect and copy state.
+
+### 5. Metric Encyclopedia with Explanatory Glyphs `(?)`
+Every KPI tile and chart header features an interactive `(?)` glyph. Clicking it opens the **Metric Help Modal** with:
+- Plain English analogies (e.g., comparing runqueue latency to a grocery store checkout).
+- Healthy, warning, and critical thresholds.
+- Impact on AI agent token generation and tool execution.
+- Copyable terminal verification commands (`pidstat`, `strace`, `ss`, `lsof`).
+- Exact Linux kernel source code locations (e.g. `kernel/sched/core.c`, `/proc/[pid]/io`).
+
+### 6. Dynamic Graph Scratchpad & Linux Playground
+Mount specialized graphs on demand:
+- *Syscall Latency Quantile Curve (P50 vs P90 vs P99)*
+- *Context Switches vs Runqueue Latency*
+- *Bidirectional Network Throughput (Tx vs Rx)*
+- *Thread Count vs RSS Memory Usage*
+- *Page Fault Dynamics (Minor vs Major Faults)*
+- Custom graphs can also be created dynamically via the AI Copilot.
+
+### 7. AI Observability Copilot Chat Drawer
+- **100% Local Rule Engine**: Operates with zero API keys, diagnosing bottlenecks from live snapshots.
+- **Natural Language Analysis**: With an optional API key configured (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`), the Copilot analyzes memory growth, socket stalls, or file descriptor leaks in context.
+
+### 8. Enterprise Exporters
+- **Prometheus (`/metrics`)**: OpenMetrics standard gauges and counters.
+- **Perfetto Traces (`/api/v1/traces/perfetto`)**: Direct import into [ui.perfetto.dev](https://ui.perfetto.dev).
+- **Structured Logs (`/api/v1/logs`)**: Ingestible by Loki, Elasticsearch, or Cloud Logging.
+- **Health Probes (`/healthz`, `/livez`, `/readyz`)**: Standard Kubernetes liveness and readiness probes.
 
 ---
 
@@ -25,228 +133,178 @@ DrishtiScope is running locally in WSL2 Ubuntu in the background:
 ```mermaid
 flowchart TD
     subgraph Host ["Linux Host (Kernel >= 5.8 / WSL2)"]
-        Target["AI Agent Target Process (e.g. agy, grok, python)"]
+        Target["AI Agent Target Process (codex, agy, copilot, node, python)"]
         
-        subgraph KernelSpace ["Kernel Space (eBPF)"]
+        subgraph KernelSpace ["Kernel Space (eBPF & /proc)"]
             Tracepoints["sys_enter / sys_exit Tracepoints"]
             RingBuf["BPF Ring Buffer (16MB)"]
-            TargetMap["Targets Hash Map & BPF Config"]
+            ProcScan["/proc/[pid]/stat, status, io, fd, net/tcp"]
             Tracepoints --> RingBuf
             Target --> Tracepoints
+            Target --> ProcScan
         end
         
         subgraph DrishtiScope ["DrishtiScope Go Daemon (:8080)"]
-            Loader["eBPF Loader / Mock Engine"]
+            Loader["eBPF Loader / Real /proc Engine"]
             ProcEnrich["/proc Inode & Socket Matcher"]
-            Aggregator["SRE Golden Signals & Sliding Window Aggregator"]
+            Aggregator["Agent Golden Signals & Sliding Window Aggregator"]
             TSDB[("Embedded SQLite TSDB (WAL)")]
             Hub["WebSocket Broadcast Hub (400ms ticks)"]
+            CopilotAPI["AI Copilot LLM Engine (Gemini / Claude / OpenAI)"]
             
             RingBuf --> Loader
+            ProcScan --> Loader
             Loader --> Aggregator
             ProcEnrich --> Aggregator
             Aggregator --> TSDB
             Aggregator --> Hub
+            Aggregator --> CopilotAPI
         end
         
-        subgraph Endpoints ["Google Operations Endpoints"]
-            Prometheus["/metrics (Monarch/Prometheus)"]
-            BorgHealth["/healthz, /livez, /readyz"]
+        subgraph Endpoints ["DrishtiScope Endpoints"]
+            Prometheus["/metrics (Prometheus)"]
+            Healthz["/healthz, /livez, /readyz"]
             PerfettoExport["/api/v1/traces/perfetto"]
-            CloudLoggingExport["/api/v1/logs"]
+            LoggingExport["/api/v1/logs"]
+            ChatEndpoint["/api/chat (Agent Copilot)"]
             
             Aggregator --> Prometheus
-            Aggregator --> BorgHealth
+            Aggregator --> Healthz
             Aggregator --> PerfettoExport
-            Aggregator --> CloudLoggingExport
+            Aggregator --> LoggingExport
+            CopilotAPI --> ChatEndpoint
         end
     end
     
-    subgraph UI ["Google Cloud Operations Console (:5173 / :8080)"]
-        Tab1["Tab 1: SRE Golden Signals & Monarch Vitals"]
-        Tab2["Tab 2: Cloud Profiler & Perfetto Trace"]
-        Tab3["Tab 3: Cloud Monitoring MQL & Compute"]
-        Tab4["Tab 4: Cloud Logging & Chronicle Security"]
+    subgraph UI ["DrishtiScope Console (:5173 / :8080)"]
+        Tab1["Tab 1: Process Story (Chronological Activity & Verdict)"]
+        Tab2["Tab 2: Overview (Agent Golden Signals & Vitals)"]
+        Tab3["Tab 3: Execution & CPU (Traces & Flamegraph)"]
+        Tab4["Tab 4: System Metrics (Telemetry & MQL)"]
+        Tab5["Tab 5: Security & Logs (Audit & Sandbox)"]
+        HelpModal["Metric Encyclopedia Popup Modal"]
+        ChatDrawer["Floating Agent Copilot Chat"]
         
         Hub --> Tab1
         Hub --> Tab2
         Hub --> Tab3
         Hub --> Tab4
+        Hub --> Tab5
+        Tab1 -.-> HelpModal
+        Tab2 -.-> HelpModal
+        ChatEndpoint <--> ChatDrawer
     end
 ```
 
 ---
 
-## 🌟 Why DrishtiScope? (Unique Selling Proposition)
+## 🚀 Quickstart
 
-Traditional monitoring tools (Prometheus Node Exporter, Datadog, Falco) were designed for static servers or microservices. **Autonomous AI Agents (such as `agy`, `grok`, `claude-code`, `ollama`) operate completely differently**:
-1. **Dynamic Tool Execution**: AI agents rapidly spawn child processes (`bash`, `git`, `docker`, `python`) via `execve`/`vfork` bursts.
-2. **Context Streaming Sockets**: AI agents maintain long-lived token streaming TCP connections to model gateways with tight latency requirements.
-3. **High-Frequency Event Loops**: AI processes run epoll and futex wait cycles with sub-millisecond dispatch.
-4. **Workspace File I/O Spikes**: Transcripts, scratchpads, and context caches generate massive read/write activity.
-
-**DrishtiScope bridges the gap** between low-level Linux kernel internals and high-level autonomous agent behavior with **zero code modification** to the target.
-
-### 📊 Architectural Benchmark: DrishtiScope vs. The Industry
-
-| Capability | **DrishtiScope (दृष्टिScope)** | Datadog Agent | Sysdig / Falco | BCC / bpftrace | Prometheus Node Exporter |
-|---|---|---|---|---|---|
-| **Primary Focus** | **Autonomous AI Agents & Target Trees** | Host / Kubernetes infra | Security rule enforcement | Manual kernel debugging | Node-wide system counters |
-| **Observation Mechanism** | **CO-RE eBPF + /proc Inode Matching** | eBPF + userspace probes | eBPF / kernel module | On-the-fly Clang compile | /proc & /sys scraping only |
-| **Zero-Root Mock Mode** | **✓ Built-in (Full Synthetic Engine)** | ✗ Requires root daemon | ✗ Requires root | ✗ Requires root | ✗ Incomplete without root |
-| **Embedded TSDB** | **✓ Zero-dependency SQLite TSDB (WAL)** | ✗ Requires SaaS Cloud | ✗ Requires external SIEM | ✗ No persistence | ✗ Needs Prometheus Server |
-| **Update Latency** | **Sub-400ms Real-Time WebSocket** | 10s – 60s batch push | gRPC event stream | Terminal stdout | 15s – 30s scrape interval |
-| **Google SRE Integration** | **✓ Monarch `/metrics`, Perfetto, Cloud Logging** | ✗ Proprietary format | ✗ gRPC / Syslog only | ✗ Raw stdout | ✗ Prometheus metrics only |
-| **Self-Contained UI** | **✓ Single 18MB Binary (Embedded SPA)** | ✗ SaaS Subscription | ✗ Needs FalcoSidekick | ✗ No UI | ✗ Needs Grafana instance |
-| **Multi-Tier Persona Views**| **✓ 4 Progressive Google Cloud Tabs** | ✗ One-size-fits-all | ✗ Security alert table | ✗ Raw CLI traces | ✗ Raw metric charts |
-
----
-
-## 🎛️ Google Cloud Operations Console: The 4 Dedicated Tabs
-
-### 1. 🔰 Tab 1: SRE Golden Signals & Monarch Vitals
-- **Google SRE Golden Signals**:
-  - **Latency**: Kernel syscall execution quantiles (P50, P90, P99) in microseconds.
-  - **Traffic**: Syscall throughput (RPS) and network transmit/receive byte rates.
-  - **Errors**: Non-zero / negative return codes per second and error ratio.
-  - **Saturation**: CPU utilization %, scheduler runqueue latency, and open file descriptors vs. system limit.
-- **SLO Availability & Error Budget Burn Rate Gauge**: 99.9% target with real-time error budget consumption meter and burn rate indicator (<1.0x target).
-- **Monarch Synchronized Waveform**: Dual-axis synchronized time series correlating Traffic RPS against P99 Latency.
-- **Target Process Identity Spotlight**: Procfs metadata, PPID tree, command-line arguments, context switches, and RSS/VMS memory footprint.
-
-### 2. ⚡ Tab 2: Cloud Profiler & Perfetto Kernel Trace
-- **Google Cloud Profiler CPU Stack Breakdown**: Low-overhead execution tree breakdown (`runtime.epollwait`, `runtime.futex`, `tokio::park`, `syscall.Syscall6`, `token_stream`, `vfs_read`).
-- **Perfetto Multi-Lane Kernel Trace Timeline**: Interactive timeline lanes:
-  - Lane 1: Thread scheduling (`main`, `worker/io`, `worker/eval`)
-  - Lane 2: Syscalls (`futex`, `epoll_wait`, `read`, `write`, `connect`)
-  - Lane 3: File I/O (`/var/lib/agent/ledger.db`, `/proc/self/status`)
-  - Lane 4: Network Sockets (`10.0.0.10:443`, `1.1.1.1:53`)
-- **Direct Exporters**: 1-click download of Perfetto Trace JSON and link to [ui.perfetto.dev](https://ui.perfetto.dev).
-- **Top System Calls Distribution**: Bar chart of the top 15 most frequent kernel syscalls.
-- **Live Process Table**: Click to inspect or re-target any active Linux process.
-
-### 3. 🔬 Tab 3: Cloud Monitoring MQL & Deep Systems Metrics
-- **Google Cloud Monitoring MQL Query Console**: Interactive Monitoring Query Language bar with presets for CPU, Memory, Syscalls, and Storage I/O.
-- **Syscall Category Donut Chart**: Proportional breakdown across Sync (`futex`), File I/O, Network Sockets, Memory (`mmap`), and Process scheduling.
-- **Memory Subsystem Allocation Pie Chart**: Active RSS vs. Page Cache vs. Shared Libraries vs. Virtual VMS.
-- **Composed Storage Throughput & IOPS Chart**: Read KB/s and Write KB/s stacked bars with an IOPS trendline.
-- **TCP Socket State Spectrum**: Distribution across `ESTABLISHED`, `TIME_WAIT`, `CLOSE_WAIT`, and `LISTEN`.
-
-### 4. 🌐 Tab 4: Cloud Logging & Chronicle Security Command Center
-- **Google Cloud Logging Log Explorer**: Query bar filtering by log name and severity (`INFO`, `WARNING`, `ERROR`).
-- **JSON LogEntry Inspector**: Expandable log records featuring `insertId`, `timestamp`, `severity`, `resource.labels`, and structured `jsonPayload`.
-- **Chronicle Security Sandbox Audit**: Tracking `EACCES` violations, refused outbound connections, and sensitive path access attempts (`/etc/shadow`, `/proc/kallsyms`).
-- **6-Axis AI Agent Workload Radar Chart**: Multi-dimensional footprint comparing `agy` against baseline Linux daemons (Compute, Memory, Network, Disk, Syscall, Security).
-- **SQLite TSDB Raw Telemetry Explorer**: Real-time inspection of time-series records persisted in `drishtiscope.db`.
-
----
-
-## 🎨 Google Cloud Console Features & Controls
-
-- **Omnibox Search**: Press `/` or `Ctrl+K` to search resources or filter processes.
-- **Quick Process Selector**: Dropdown to switch targets between `agy`, `payments-agent`, `node`, `dockerd`, `kubelet`, etc.
-- **Live Stream Controls**: Pause / Resume live telemetry streaming to freeze and inspect anomalies.
-- **Time Range Selector**: Toggle between `1m`, `5m`, `15m`, `1h`, and `Live`.
-- **Dual Theme Switch**: Toggle between **Nocturnal Control Room (Dark)** and **Clinical Operations (Light)**.
-
----
-
-## 🛠️ CLI Flags & Environment Variables
-
-| Flag / Env Var | Default | Description |
-|---|---|---|
-| `-addr` / `HTTP_ADDR` | `:8080` | HTTP and WebSocket listen address |
-| `-comm` / `TARGET_COMM` | `agy` | Target process comm name filter |
-| `-pid` / `TARGET_PID` | `0` | Target process PID (0 = match by comm) |
-| `-mode` / `MODE` | `auto` | Execution mode: `auto` (tries eBPF, falls back to mock), `ebpf`, or `mock` |
-| `-db` / `DB_PATH` | `drishtiscope.db` | Path to SQLite TSDB time-series database |
-| `-static` / `STATIC_DIR` | `./frontend/dist` | Directory containing built React static assets |
-| `-tick` / `SNAPSHOT_MS` | `400` | Snapshot aggregation interval in milliseconds |
-
----
-
-## 💻 Build & Run Instructions
+### Option 1: Run Pre-Built Binary (Zero-Root Real Mode)
 
 ```bash
-# 1. Run in DEMO mode (Go Mock backend + Vite UI without root)
-make demo
+# Download the latest binary for your architecture
+curl -sSL https://github.com/drishtiscope/drishtiscope/releases/latest/download/drishtiscope_linux_amd64.tar.gz | tar -xz
 
-# 2. Run with real eBPF (requires root / CAP_BPF on Linux 5.8+)
-sudo ./drishtiscope --mode=ebpf --comm=agy --db=drishtiscope.db
+# Start DrishtiScope in Real Mode watching an agent (e.g. agy or codex)
+./drishtiscope -mode=real -comm=agy
 
-# 3. Build single-binary production distribution
-make build
+# Open dashboard
+open http://localhost:8080
+```
 
-# 4. Scrape Prometheus metrics
-curl -s http://localhost:8080/metrics
+### Option 2: Run with Docker / Podman
 
-# 5. Export Perfetto trace for ui.perfetto.dev
-curl -s http://localhost:8080/api/v1/traces/perfetto -o trace.json
+```bash
+docker run -d --name drishtiscope \
+  --pid=host \
+  --net=host \
+  -v /proc:/proc:ro \
+  ghcr.io/drishtiscope/drishtiscope:latest
+```
 
-# 6. Fetch Google Cloud Logging records
-curl -s http://localhost:8080/api/v1/logs
+### Option 3: Build from Source
+
+```bash
+# 1. Clone repository
+git clone https://github.com/drishtiscope/drishtiscope.git
+cd drishtiscope
+
+# 2. Build frontend
+cd frontend
+npm ci
+npm run build
+cd ..
+
+# 3. Build backend
+cd backend
+go build -ldflags="-s -w" -o ../drishtiscope ./cmd/agentscope
+cd ..
+
+# 4. Launch DrishtiScope
+./drishtiscope -mode=real -comm=agy -static=frontend/dist
 ```
 
 ---
 
-## 🌍 Cross-Platform Architecture & Microsoft eBPF for Windows
+## ❓ Frequently Asked Questions (FAQ)
 
-DrishtiScope supports **Linux**, **Windows**, and **macOS**:
-- **Linux (Kernel >= 5.8)**: Attaches native tracepoints (`sched_process_exec`, `sched_process_exit`, `raw_syscalls/sys_enter`, `raw_syscalls/sys_exit`) via Cilium eBPF and reads ring buffers.
-- **Windows (10/11 & Server 2022+)**: Integrates with **[Microsoft eBPF for Windows](https://github.com/microsoft/ebpf-for-windows)** by detecting the `\\.\EbpfCoreDevice` driver node and the `ebpfcore.sys` Windows service. When execution drivers are absent or permissions are constrained, it transparently falls back to the high-fidelity multi-process synthetic telemetry engine. See [docs/WINDOWS_EBPF.md](docs/WINDOWS_EBPF.md) for driver setup.
-- **macOS (Darwin)**: Runs in zero-dependency synthetic engine mode for development and simulation on Apple Silicon (`arm64`) and Intel (`amd64`).
+Here are answers to the most common questions. For detailed explanations, see the full [docs/FAQ.md](docs/FAQ.md).
 
----
+#### 1. What makes DrishtiScope fundamentally different from LangSmith, Langfuse, and Phoenix?
+Application tracers observe what the agent *said* it did; DrishtiScope observes what the host process *actually did*. It tracks child `execve` bursts, file modifications, socket throughput, and kernel scheduling stalls on closed-source binaries without SDKs.
 
-## 📦 Multi-Architecture Releases with GoReleaser
+#### 2. How does DrishtiScope observe closed-source AI agents without code changes?
+By reading live `/proc/[pid]/*` files (`stat`, `statm`, `status`, `io`, `fd`, `net/tcp`) and optionally attaching non-invasive eBPF kernel tracepoints to `raw_syscalls`.
 
-DrishtiScope produces cross-platform binary packages and checksums using **[GoReleaser](https://goreleaser.com)**:
+#### 3. Does DrishtiScope require `root` or `sudo`?
+No. In Real Mode (`mode=real`), DrishtiScope operates completely unprivileged without `sudo` on developer laptops and WSL2.
 
-| Platform | Arch | Binary | Package |
-| :--- | :--- | :--- | :--- |
-| **Linux** | `amd64` | `drishtiscope` | `drishtiscope_*_linux_amd64.tar.gz` |
-| **Linux** | `arm64` | `drishtiscope` | `drishtiscope_*_linux_arm64.tar.gz` |
-| **Windows** | `amd64` | `drishtiscope.exe` | `drishtiscope_*_windows_amd64.zip` |
-| **Windows** | `arm64` | `drishtiscope.exe` | `drishtiscope_*_windows_arm64.zip` |
-| **macOS (Darwin)** | `amd64` | `drishtiscope` | `drishtiscope_*_darwin_amd64.tar.gz` |
-| **macOS (Darwin)** | `arm64` | `drishtiscope` | `drishtiscope_*_darwin_arm64.tar.gz` |
+#### 4. Does DrishtiScope intercept or store prompts, completions, or LLM tokens?
+No. DrishtiScope adheres to a strict zero-payload principle. It does not sniff TLS bodies or store prompt text. Only system metadata and resource metrics are recorded.
 
-To build release archives locally:
-```bash
-# Verify GoReleaser configuration
-goreleaser check
+#### 5. How does DrishtiScope compare to AgentSight?
+AgentSight uses TLS uprobes to capture prompts alongside syscalls. DrishtiScope is an SRE control room focused on process vitals, golden signals, and system bottlenecks without payload decryption.
 
-# Build all 6 targets and generate release archives in dist/
-goreleaser release --snapshot --clean
-```
+#### 6. What is the CPU and memory overhead?
+Under 1.2% CPU and 18–35 MB RSS in Real Mode. Under 1.5% CPU in high-frequency eBPF mode.
 
----
+#### 7. How does Anti-Flicker mode work?
+It throttles stream intervals (500ms to 5s) and smooths UI animations to eliminate eye strain from continuous WebSocket updates.
 
-## 🧪 Rigorous Automated Test Coverage (>90% Across Codebase)
+#### 8. What are the 5 tabs?
+Process Story (Activity), Overview (Vitals), Execution & CPU (Flamegraphs), System Metrics (MQL), and Security & Logs (Audit).
 
-Every Go package in DrishtiScope meets or exceeds **90% automated statement test coverage**:
+#### 9. How do the 5 themes work?
+Supports Light (Default), Dark, Ubuntu, Unix, and Purple themes via CSS custom properties.
 
-| Package | Test Coverage | Status |
-| :--- | :---: | :---: |
-| `github.com/agentscope/agentscope/cmd/agentscope` | **93.9%** | PASS |
-| `github.com/agentscope/agentscope/internal/agg` | **97.8%** | PASS |
-| `github.com/agentscope/agentscope/internal/api` | **96.0%** | PASS |
-| `github.com/agentscope/agentscope/internal/audit` | **100.0%** | PASS |
-| `github.com/agentscope/agentscope/internal/config` | **94.0%** | PASS |
-| `github.com/agentscope/agentscope/internal/ebpfagent` | **91.7%** | PASS |
-| `github.com/agentscope/agentscope/internal/enrich` | **95.3%** | PASS |
-| `github.com/agentscope/agentscope/internal/hub` | **94.0%** | PASS |
-| `github.com/agentscope/agentscope/internal/mock` | **97.4%** | PASS |
-| `github.com/agentscope/agentscope/internal/protocol` | **92.3%** | PASS |
-| `github.com/agentscope/agentscope/internal/storage` | **90.8%** | PASS |
+#### 10. What is the Dynamic Graph Scratchpad?
+An on-demand charting canvas at the bottom of the dashboard for visualizing metric correlations (latency quantiles, runqueue vs switches, network throughput).
 
-Run the full test suite with coverage:
-```bash
-cd backend && go test -cover ./...
-```
+#### 11. Does the AI Copilot require an external API key?
+No. It includes a built-in deterministic rule engine that diagnoses bottlenecks locally without an API key.
+
+#### 12. Can I export telemetry to Prometheus and Perfetto?
+Yes. DrishtiScope provides `/metrics` for Prometheus scraping and `/api/v1/traces/perfetto` for [ui.perfetto.dev](https://ui.perfetto.dev).
+
+#### 13. Does it run on WSL2, Windows, or macOS?
+Yes. WSL2 is supported natively in Real Mode. Experimental Windows eBPF and Darwin synthetic modes are included.
+
+#### 14. How is data persisted?
+In an embedded SQLite database using WAL mode with asynchronous decoupled writes.
+
+#### 15. How do I contribute?
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and submit a pull request!
 
 ---
 
-## 📜 License
+## 🤝 Contributing
 
-Dual-licensed under MIT and GPL-2.0 (required for Linux eBPF kernel helper compatibility).
+We welcome contributions from developers, Linux systems engineers, and AI researchers worldwide. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for full development guidelines, testing standards, and architecture details.
+
+---
+
+## 📄 License
+
+- DrishtiScope userspace Go daemon and React console are licensed under the [MIT License](LICENSE).
+- The eBPF kernel program (`backend/bpf/agent.bpf.c`) is dual-licensed under **GPL-2.0 OR MIT**.

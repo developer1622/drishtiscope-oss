@@ -1,27 +1,39 @@
-# OWASP Top 10:2025 controls
+# Security Policy — DrishtiScope
 
-This file maps DrishtiScope to the [OWASP Top 10:2025](https://owasp.org/Top10/).
-The HTTP API is a **local observability surface**. It is deny-by-default on the network.
+DrishtiScope (दृष्टिScope) is committed to ensuring the highest standards of security, privacy, and system integrity. Because DrishtiScope interacts closely with the Linux kernel and processes, we treat security vulnerabilities with high urgency.
 
-| ID | Risk | What we do |
-|----|------|------------|
-| **A01** Broken Access Control (incl. SSRF) | Unauthenticated remote use of `/api/*` and `/ws` | Without `AUTH_TOKEN`, every route except `GET /api/health` is **loopback-only**. Mutations from non-loopback IPs are 403. `X-Forwarded-For` is ignored unless `TRUST_PROXY=1`. No user-controlled outbound fetch (no SSRF surface). |
-| **A02** Security Misconfiguration | Open CORS, verbose errors, default bind | CORS allow-list (never widened by `--ws-insecure`). Security headers (CSP, frame deny, nosniff, Permissions-Policy, COOP). JSON errors do not leak SQL. Startup warns if bound to all interfaces without a token. |
-| **A03** Software Supply Chain Failures | Compromised deps | `go.sum` + `package-lock.json` committed. `make vulncheck` runs `govulncheck`. |
-| **A04** Cryptographic Failures | Token leakage, world-readable DB | Bearer compared with `crypto/subtle`. Tokens never logged (`access_token` redacted). SQLite file mode `0600`. HSTS set when TLS is terminated on the process. |
-| **A05** Injection | SQLi, XSS, path, comm injection | Parameterized SQL. `DisallowUnknownFields` on JSON. Comm/pid sanitization. SPA rejects `..`. React does not use `dangerouslySetInnerHTML`. POST requires `application/json`. |
-| **A06** Insecure Design | Abuse of a privileged local agent | Rate limits per IP. Max WS clients. Body size cap. Fail closed: short `AUTH_TOKEN` is a config error. |
-| **A07** Authentication Failures | Missing/brute-force auth | Optional `AUTH_TOKEN` (min 16 chars). Constant-time compare. Auth failures audited and rate-limited. No default password. |
-| **A08** Software or Data Integrity Failures | Tampered input | Unknown JSON fields rejected. BPF object is embedded at build time, not downloaded. |
-| **A09** Security Logging & Alerting Failures | Silent attacks | `audit` lines for auth fail, lockout, CORS reject, rate limit, target change, panic. Secrets stripped. |
-| **A10** Mishandling of Exceptional Conditions | Fail-open, leaked panics | Panic recovery returns generic 500. Auth/config errors fail closed. Timeouts and graceful shutdown. |
+---
 
-## Enable authentication
+## 🛡️ Supported Versions
 
-```bash
-export AUTH_TOKEN="$(openssl rand -hex 16)"
-export VITE_API_TOKEN="$AUTH_TOKEN"   # frontend
-./drishtiscope --addr=127.0.0.1:8080
-```
+We provide security updates for the following versions:
 
-Clients send `Authorization: Bearer <token>`. Browsers on WebSocket use `?access_token=` (redacted in logs).
+| Version | Supported |
+| :--- | :--- |
+| `1.x` | :white_check_mark: |
+| `< 1.0` | :x: |
+
+---
+
+## 🔒 Security Architecture & Guarantees
+
+DrishtiScope is built with privacy and security by design:
+
+1. **Zero Payload Sniffing**: DrishtiScope does **not** intercept, decrypt, or record TLS payloads, model prompts, completions, or LLM token strings. It strictly observes process and kernel metadata (syscalls, file paths, socket states, and CPU/memory vitals).
+2. **Loopback by Default**: The Go server binds to `127.0.0.1:8080` by default. Binding to `0.0.0.0` without setting `AUTH_TOKEN` generates explicit warning logs and rejects unauthenticated remote connections with HTTP 403.
+3. **Safe Memory Management**: Go memory safety ensures freedom from buffer overflows, use-after-free, and memory corruption in the userspace daemon.
+4. **Verified eBPF Programs**: All eBPF programs pass the in-kernel BPF verifier, guaranteeing bounded execution, safe pointer arithmetic, and zero kernel panics.
+
+---
+
+## 🚨 Reporting a Vulnerability
+
+If you discover a potential security vulnerability in DrishtiScope, please **do not open a public GitHub issue**. Instead, report it privately through GitHub Security Advisories:
+
+1. Navigate to the repository's **Security** tab.
+2. Click on **Advisories** -> **Report a vulnerability**.
+3. Include:
+   - Detailed description of the vulnerability and affected components.
+   - Proof-of-concept steps to reproduce.
+   - Potential impact on the host system or monitored processes.
+4. Our maintainers will acknowledge receipt within 48 hours and coordinate a fix and advisory.

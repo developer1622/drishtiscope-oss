@@ -9,7 +9,7 @@ DrishtiScope provides first-class, cross-platform telemetry observability across
 ```
                      ┌──────────────────────────────────────────────┐
                      │          DrishtiScope UI (React/TS)          │
-                     │  SRE Golden Signals • Process • Net • Files  │
+                     │  Agent Golden Signals • Process • Net • Files │
                      └──────────────────────▲───────────────────────┘
                                             │ WebSocket JSON (:8080/ws)
                      ┌──────────────────────┴───────────────────────┐
