@@ -247,8 +247,6 @@ export function Header({
                   </option>
                 );
               })}
-              <option value="agy">agy — Autonomous Pair Programming Agent</option>
-              <option value="codex">codex — AI Code Execution Host</option>
             </datalist>
             {err && (
               <div className="absolute right-0 top-full mt-1 text-[10px] text-rose bg-panel border border-border rounded px-2 py-0.5 shadow z-50 whitespace-nowrap">

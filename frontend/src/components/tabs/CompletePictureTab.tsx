@@ -82,7 +82,7 @@ export function CompletePictureTab({
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-full">
-      {/* Top Banner: AI Agent Profiling & USP */}
+      {/* Top Banner: AI Agent Profiling */}
       <div className="bg-panel border border-border rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
@@ -357,76 +357,6 @@ export function CompletePictureTab({
         )}
       </Panel>
 
-      {/* Row 3: Unique Selling Proposition (USP) & Competitor Benchmark Table */}
-      <Panel
-        title="DrishtiScope Unique Selling Proposition (USP) & Architectural Benchmark"
-        subtitle="Comparing DrishtiScope against Datadog Agent, Falco, BCC / bpftrace & Prometheus Node Exporter"
-      >
-        <div className="w-full overflow-x-auto">
-          <table className="w-full text-xs font-mono border-collapse">
-            <thead>
-              <tr className="text-muted border-b border-border bg-panel2/80 text-left">
-                <th className="py-2.5 px-3">Capability / Metric</th>
-                <th className="py-2.5 px-3 text-cyan font-bold">DrishtiScope (दृष्टिScope)</th>
-                <th className="py-2.5 px-3">Datadog Agent</th>
-                <th className="py-2.5 px-3">Falco</th>
-                <th className="py-2.5 px-3">BCC / bpftrace</th>
-                <th className="py-2.5 px-3">Prometheus Node Exp</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-border/50 hover:bg-panel2">
-                <td className="py-2 px-3 font-semibold text-txt">Primary Observation Target</td>
-                <td className="py-2 px-3 text-cyan font-bold">AI Agents & Target Process Trees</td>
-                <td className="py-2 px-3 text-muted">Host & Kubernetes cluster</td>
-                <td className="py-2 px-3 text-muted">Host security rules</td>
-                <td className="py-2 px-3 text-muted">Ad-hoc kernel tracing</td>
-                <td className="py-2 px-3 text-muted">Host-wide system counters</td>
-              </tr>
-              <tr className="border-b border-border/50 hover:bg-panel2">
-                <td className="py-2 px-3 font-semibold text-txt">Collection Mechanism</td>
-                <td className="py-2 px-3 text-cyan font-bold">CO-RE eBPF + /proc Inode Matching</td>
-                <td className="py-2 px-3 text-muted">eBPF + Userspace polling</td>
-                <td className="py-2 px-3 text-muted">eBPF + Kernel module</td>
-                <td className="py-2 px-3 text-muted">Clang on-the-fly compile</td>
-                <td className="py-2 px-3 text-muted">/proc and /sys scraping only</td>
-              </tr>
-              <tr className="border-b border-border/50 hover:bg-panel2">
-                <td className="py-2 px-3 font-semibold text-txt">Zero-Root Mock Fallback</td>
-                <td className="py-2 px-3 text-green font-bold">✓ Built-in (Full Synthetic Engine)</td>
-                <td className="py-2 px-3 text-rose">✗ Requires Root/Daemon</td>
-                <td className="py-2 px-3 text-rose">✗ Requires Root</td>
-                <td className="py-2 px-3 text-rose">✗ Requires Root</td>
-                <td className="py-2 px-3 text-rose">✗ Partial without root</td>
-              </tr>
-              <tr className="border-b border-border/50 hover:bg-panel2">
-                <td className="py-2 px-3 font-semibold text-txt">Embedded TSDB Database</td>
-                <td className="py-2 px-3 text-cyan font-bold">✓ Zero-Dependency SQLite TSDB (WAL)</td>
-                <td className="py-2 px-3 text-muted">✗ Requires SaaS Cloud</td>
-                <td className="py-2 px-3 text-muted">✗ Relies on external SIEM</td>
-                <td className="py-2 px-3 text-muted">✗ No persistence</td>
-                <td className="py-2 px-3 text-muted">✗ Needs external Prometheus</td>
-              </tr>
-              <tr className="border-b border-border/50 hover:bg-panel2">
-                <td className="py-2 px-3 font-semibold text-txt">Streaming Protocol</td>
-                <td className="py-2 px-3 text-cyan font-bold">Sub-400ms Real-time WebSocket</td>
-                <td className="py-2 px-3 text-muted">10-60s batch HTTP push</td>
-                <td className="py-2 px-3 text-muted">gRPC event stream</td>
-                <td className="py-2 px-3 text-muted">Terminal stdout</td>
-                <td className="py-2 px-3 text-muted">15-30s pull scraping</td>
-              </tr>
-              <tr className="border-b border-border/50 hover:bg-panel2">
-                <td className="py-2 px-3 font-semibold text-txt">Single-Binary Self-Contained UI</td>
-                <td className="py-2 px-3 text-green font-bold">✓ 18MB Single Binary (Embedded SPA)</td>
-                <td className="py-2 px-3 text-rose">✗ SaaS Subscription</td>
-                <td className="py-2 px-3 text-rose">✗ Needs FalcoSidekick</td>
-                <td className="py-2 px-3 text-rose">✗ No UI</td>
-                <td className="py-2 px-3 text-rose">✗ Needs Grafana</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </Panel>
 
       {/* Structured Kernel Log Explorer & Security Command Center */}
       <Panel
