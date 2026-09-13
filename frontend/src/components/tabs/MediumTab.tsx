@@ -6,7 +6,7 @@ import { SyscallBar } from '../SyscallBar';
 import { ProcessTable } from '../ProcessTable';
 import { KPITile } from '../KPITile';
 import { MetricHelpButton } from '../MetricHelpModal';
-import { fmtBytes, fmtBps } from '../../utils/format';
+import { fmtBytes, fmtBps, agentLabel } from '../../utils/format';
 import {
   Cpu,
   HardDrive,
@@ -46,7 +46,7 @@ export function MediumTab({
   const rss = fmtBytes(kpis?.rss_bytes || 0);
   const cpuSpark = (snapshot?.cpu_series || []).map((p) => p.cpu_pct);
 
-  // Google Cloud Profiler Simulated Stack Breakdown
+  // Profiler Simulated Stack Breakdown
   const flameNodes = [
     { name: 'runtime.epollwait (syscall)', pct: 32.4, color: '#4285F4', desc: 'I/O multiplexing event loop polling' },
     { name: 'runtime.futex (sync)', pct: 21.1, color: '#3ce0cf', desc: 'Goroutine channel synchronization & lock parks' },
@@ -135,9 +135,9 @@ export function MediumTab({
         />
       </div>
 
-      {/* Google Cloud Profiler Section */}
+      {/* Continuous eBPF Profiler Section */}
       <Panel
-        title="Google Cloud Profiler: CPU Stack Frame Breakdown"
+        title="Continuous eBPF Profiler: CPU Stack Frame Breakdown"
         subtitle="Continuous low-overhead eBPF CPU instruction sampling & execution call tree"
         helpMetricId="flamegraph_cpu"
         helpColor="cyan"
@@ -324,10 +324,13 @@ export function MediumTab({
         <ProcessTable
           processes={snapshot?.processes || []}
           selectedPid={selectedPid}
+          activeTargetComm={activeTargetComm}
           onSelect={(pid) => {
             onSelectPid(pid);
             const p = snapshot?.processes?.find((x) => x.pid === pid);
-            if (p) onTargetChange(p.comm, p.pid);
+            if (!p) return;
+            const label = agentLabel(p.comm, p.cmdline);
+            onTargetChange(label, label !== p.comm ? 0 : p.pid);
           }}
         />
       </Panel>

@@ -1,12 +1,32 @@
-/* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
+/* Web Fonts — self-hosted via npm packages; no external CDN required */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* 1. Default Light Mode (Clean Slate & Modern Enterprise UI) */
+:root, html.light {
+  --color-bg: #f8fafc;
+  --color-panel: #ffffff;
+  --color-panel2: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-txt: #0f172a;
+  --color-muted: #64748b;
+  --color-cyan: #0284c7;
+  --color-green: #16a34a;
+  --color-amber: #d97706;
+  --color-rose: #e11d48;
+  color-scheme: light;
+}
+
+/* 2. Nocturnal Dark Mode */
+html.dark {
   --color-bg: #07080d;
   --color-panel: #0e1118;
   --color-panel2: #12151e;
@@ -20,18 +40,49 @@
   color-scheme: dark;
 }
 
-html.light {
-  --color-bg: #f8fafc;
-  --color-panel: #ffffff;
-  --color-panel2: #f1f5f9;
-  --color-border: #e2e8f0;
-  --color-txt: #0f172a;
-  --color-muted: #64748b;
-  --color-cyan: #0284c7;
-  --color-green: #16a34a;
-  --color-amber: #d97706;
-  --color-rose: #e11d48;
-  color-scheme: light;
+/* 3. Canonical Ubuntu Theme (Aubergine & Orange) */
+html.ubuntu {
+  --color-bg: #2c001e;
+  --color-panel: #3a122e;
+  --color-panel2: #491b3b;
+  --color-border: #632752;
+  --color-txt: #ffffff;
+  --color-muted: #aea79f;
+  --color-cyan: #e95420; /* Ubuntu Orange */
+  --color-green: #38b449; /* Canonical Green */
+  --color-amber: #ffb81c; /* Ubuntu Gold */
+  --color-rose: #df382c; /* Ubuntu Red Alert */
+  color-scheme: dark;
+}
+
+/* 4. Retro Unix / Terminal CRT Mode */
+html.unix {
+  --color-bg: #030803;
+  --color-panel: #0a130a;
+  --color-panel2: #102010;
+  --color-border: #183818;
+  --color-txt: #33ff33; /* Phosphor Matrix Green */
+  --color-muted: #228b22;
+  --color-cyan: #00ffcc;
+  --color-green: #00ff44;
+  --color-amber: #ffb000; /* Phosphor Amber */
+  --color-rose: #ff3333;
+  color-scheme: dark;
+}
+
+/* 5. Cyber Purple / Synthwave Mode */
+html.purple {
+  --color-bg: #0f0a1e;
+  --color-panel: #191233;
+  --color-panel2: #241b47;
+  --color-border: #3b2d6e;
+  --color-txt: #f5f0ff;
+  --color-muted: #bda4f8;
+  --color-cyan: #c084fc; /* Electric Purple */
+  --color-green: #4ade80;
+  --color-amber: #facc15;
+  --color-rose: #fb7185;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }

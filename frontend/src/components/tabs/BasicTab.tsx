@@ -1,9 +1,10 @@
 import React from 'react';
 import { Snapshot, ProcessRow } from '../../types/protocol';
+import { useScopeStore } from '../../store/useScopeStore';
 import { KPITile } from '../KPITile';
 import { Panel } from '../Panel';
 import { MetricHelpButton } from '../MetricHelpModal';
-import { fmtBytes, fmtBps } from '../../utils/format';
+import { fmtBytes, fmtBps, agentLabel } from '../../utils/format';
 import {
   Cpu,
   HardDrive,
@@ -41,14 +42,19 @@ export function BasicTab({
   snapshot: Snapshot | null;
   targetProcess?: ProcessRow;
 }) {
+  const { antiFlicker } = useScopeStore();
   const kpis = snapshot?.kpis;
   const sre = snapshot?.sre;
   const target = snapshot?.meta?.target;
+  const identityLabel = agentLabel(
+    targetProcess?.comm || target?.comm || 'agy',
+    targetProcess?.cmdline
+  );
   const net = fmtBps((kpis?.net_bps_tx || 0) + (kpis?.net_bps_rx || 0));
   const disk = fmtBps((kpis?.disk_bps_r || 0) + (kpis?.disk_bps_w || 0));
   const rss = fmtBytes(kpis?.rss_bytes || 0);
 
-  // SRE Golden Signals Values
+  // Agent Golden Signals Values
   const p50 = sre?.latency_p50_us ?? 1.18;
   const p90 = sre?.latency_p90_us ?? 4.82;
   const p99 = sre?.latency_p99_us ?? 21.4;
@@ -90,7 +96,7 @@ export function BasicTab({
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-full">
-      {/* Google SRE SLO & Monarch Availability Banner */}
+      {/* Agent SLO & Availability Banner */}
       <div className="bg-panel border border-border rounded-xl p-4 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-[#4285F4] shrink-0">
@@ -99,9 +105,9 @@ export function BasicTab({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-base font-bold text-txt">
-                Google SRE Golden Signals: {target?.comm || 'Target Process'}
+                Agent Golden Signals: {target?.comm || 'Target Process'}
               </h2>
-              <MetricHelpButton metricId="slo_availability" color="blue" size={14} title="Click to understand SRE Golden Signals & SLO Availability" />
+              <MetricHelpButton metricId="slo_availability" color="blue" size={14} title="Click to understand Agent Golden Signals & SLO Availability" />
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#34A853]/15 text-[#34A853] border border-[#34A853]/30 flex items-center gap-1 font-mono font-medium">
                 <CheckCircle2 size={11} /> SLO MET (99.9% TARGET)
               </span>
@@ -137,7 +143,7 @@ export function BasicTab({
                   startAngle={90}
                   endAngle={-270}
                 >
-                  <RadialBar background={{ fill: 'var(--color-panel2)' }} dataKey="value" cornerRadius={4} />
+                  <RadialBar background={{ fill: 'var(--color-panel2)' }} dataKey="value" cornerRadius={4} isAnimationActive={!antiFlicker} />
                 </RadialBarChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold font-mono text-txt">
@@ -172,7 +178,7 @@ export function BasicTab({
         </div>
       </div>
 
-      {/* 4 Google SRE Golden Signals KPI Cards */}
+      {/* 4 Agent Golden Signals KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Signal 1: Latency */}
         <div className="bg-panel border border-border rounded-xl p-3.5 flex flex-col justify-between relative overflow-hidden">
@@ -357,6 +363,7 @@ export function BasicTab({
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#trafficGrad)"
+                  isAnimationActive={!antiFlicker}
                 />
                 <Line
                   yAxisId="right"
@@ -366,6 +373,7 @@ export function BasicTab({
                   stroke="#FBBC04"
                   strokeWidth={2}
                   dot={false}
+                  isAnimationActive={!antiFlicker}
                 />
               </ComposedChart>
             </ResponsiveContainer>
@@ -374,7 +382,7 @@ export function BasicTab({
 
         {/* Target Process Deep Inspection Spotlight */}
         <Panel
-          title={`Target Identity: ${targetProcess?.comm || target?.comm || 'agy'}`}
+          title={`Target Identity: ${identityLabel}`}
           subtitle="Kernel procfs & scheduler telemetry"
           helpMetricId="pid"
           helpColor="blue"
@@ -387,8 +395,11 @@ export function BasicTab({
                   <MetricHelpButton metricId="pid" color="blue" size={11} />
                 </div>
                 <div className="text-sm font-bold font-mono text-txt mt-0.5">
-                  {targetProcess?.comm || target?.comm || 'agy'}{' '}
+                  {identityLabel}{' '}
                   <span className="text-cyan font-normal">(PID {targetProcess?.pid || target?.pid || 0})</span>
+                  {targetProcess?.comm && identityLabel !== targetProcess.comm && (
+                    <span className="text-muted font-normal text-[11px]"> comm={targetProcess.comm}</span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-1.5">

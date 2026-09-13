@@ -16,4 +16,21 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React runtime — tiny, always cached
+          'vendor-react': ['react', 'react-dom'],
+          // Charting library — large, but changes rarely
+          'vendor-charts': ['recharts'],
+          // Icon set — large SVG bundle
+          'vendor-icons': ['lucide-react'],
+          // State management
+          'vendor-state': ['zustand'],
+        },
+      },
+    },
+  },
 });

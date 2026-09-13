@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Snapshot, EventRow } from '../../types/protocol';
+import { useScopeStore } from '../../store/useScopeStore';
 import { Panel } from '../Panel';
 import { MetricHelpButton } from '../MetricHelpModal';
 import { fmtBytes, fmtBps } from '../../utils/format';
@@ -44,6 +45,7 @@ export function CompletePictureTab({
   snapshot: Snapshot | null;
   events: EventRow[];
 }) {
+  const { antiFlicker } = useScopeStore();
   const [historyPoints, setHistoryPoints] = useState<any[]>([]);
   const [activeRole, setActiveRole] = useState<'perf' | 'sec' | 'net' | 'storage'>('perf');
   const [logSeverity, setLogSeverity] = useState<'ALL' | 'INFO' | 'WARNING' | 'ERROR'>('ALL');
@@ -145,8 +147,8 @@ export function CompletePictureTab({
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '6px' }} />
-                <Radar name={targetComm} dataKey="Agent" stroke="#3ce0cf" fill="#3ce0cf" fillOpacity={0.4} />
-                <Radar name="Baseline Daemon" dataKey="Baseline" stroke="#8b95a8" fill="#8b95a8" fillOpacity={0.2} />
+                <Radar name={targetComm} dataKey="Agent" stroke="#3ce0cf" fill="#3ce0cf" fillOpacity={0.4} isAnimationActive={!antiFlicker} />
+                <Radar name="Baseline Daemon" dataKey="Baseline" stroke="#8b95a8" fill="#8b95a8" fillOpacity={0.2} isAnimationActive={!antiFlicker} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
@@ -173,9 +175,9 @@ export function CompletePictureTab({
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '6px' }} />
-                <Bar dataKey="EACCES" name="EACCES (Permission Denied)" fill="#ff5d73" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="FailedConnect" name="Connection Refused" fill="#f5b942" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="SensitiveProc" name="Sensitive Probe (kallsyms)" fill="#a855f7" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="EACCES" name="EACCES (Permission Denied)" fill="#ff5d73" radius={[4, 4, 0, 0]} isAnimationActive={!antiFlicker} />
+                <Bar dataKey="FailedConnect" name="Connection Refused" fill="#f5b942" radius={[4, 4, 0, 0]} isAnimationActive={!antiFlicker} />
+                <Bar dataKey="SensitiveProc" name="Sensitive Probe (kallsyms)" fill="#a855f7" radius={[4, 4, 0, 0]} isAnimationActive={!antiFlicker} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -426,10 +428,10 @@ export function CompletePictureTab({
         </div>
       </Panel>
 
-      {/* Google Cloud Logging & Chronicle Security Command Center */}
+      {/* Structured Kernel Log Explorer & Security Command Center */}
       <Panel
-        title="Google Cloud Logging: Structured Kernel Log Explorer"
-        subtitle="Chronicle Security audit telemetry & JSON LogEntry records"
+        title="Structured Kernel Log Explorer"
+        subtitle="Security audit telemetry & JSON LogEntry records"
         helpMetricId="chronicle_security"
         helpColor="rose"
         action={

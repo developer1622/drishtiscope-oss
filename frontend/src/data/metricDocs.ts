@@ -1,7 +1,7 @@
 export interface MetricDoc {
   id: string;
   title: string;
-  category: 'SRE Golden Signals' | 'Compute & CPU' | 'Memory & RAM' | 'Storage & Disk' | 'Network & Sockets' | 'Processes & Threads' | 'Security & Audit' | 'Kernel & eBPF';
+  category: 'Core Agent Signals' | 'Compute & CPU' | 'Memory & RAM' | 'Storage & Disk' | 'Network & Sockets' | 'Processes & Threads' | 'Security & Audit' | 'Kernel & eBPF';
   themeColor: 'cyan' | 'blue' | 'emerald' | 'amber' | 'rose' | 'purple';
   shortDefinition: string;
   juniorAdminExplanation: string;
@@ -100,7 +100,7 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
   syscalls_per_sec: {
     id: 'syscalls_per_sec',
     title: 'System Calls / Sec (Traffic RPS)',
-    category: 'SRE Golden Signals',
+    category: 'Core Agent Signals',
     themeColor: 'cyan',
     shortDefinition: 'The frequency of transitions from userspace into kernel space (sys_enter tracepoints) per second.',
     juniorAdminExplanation:
@@ -120,7 +120,7 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
   err_syscalls_per_sec: {
     id: 'err_syscalls_per_sec',
     title: 'Syscall Errors / Sec',
-    category: 'SRE Golden Signals',
+    category: 'Core Agent Signals',
     themeColor: 'rose',
     shortDefinition: 'Number of syscalls per second that returned negative errno codes (e.g. EACCES, ENOENT, ECONNREFUSED).',
     juniorAdminExplanation:
@@ -180,7 +180,7 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
   p50_latency: {
     id: 'p50_latency',
     title: 'P50 Median Latency',
-    category: 'SRE Golden Signals',
+    category: 'Core Agent Signals',
     themeColor: 'blue',
     shortDefinition: 'The 50th percentile of kernel syscall execution time (median response time).',
     juniorAdminExplanation:
@@ -200,7 +200,7 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
   p90_latency: {
     id: 'p90_latency',
     title: 'P90 Syscall Latency',
-    category: 'SRE Golden Signals',
+    category: 'Core Agent Signals',
     themeColor: 'purple',
     shortDefinition: 'The 90th percentile latency: 90% of system calls complete faster than this value.',
     juniorAdminExplanation:
@@ -220,7 +220,7 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
   p99_latency: {
     id: 'p99_latency',
     title: 'P99 Tail Latency (Worst 1%)',
-    category: 'SRE Golden Signals',
+    category: 'Core Agent Signals',
     themeColor: 'rose',
     shortDefinition: 'The 99th percentile: only 1 in 100 system calls experiences latency higher than this number.',
     juniorAdminExplanation:
@@ -240,14 +240,14 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
   slo_availability: {
     id: 'slo_availability',
     title: 'SLO Availability (%)',
-    category: 'SRE Golden Signals',
+    category: 'Core Agent Signals',
     themeColor: 'emerald',
     shortDefinition: 'Service Level Objective compliance score calculated as (Successful Syscalls / Total Syscalls) * 100%.',
     juniorAdminExplanation:
-      'Google SRE standard metric indicating what fraction of system interactions succeeded without kernel errors. Standard enterprise targets aim for "Three Nines" (99.9%).',
+      'Standard system reliability metric indicating what fraction of system interactions succeeded without kernel errors. Enterprise reliability targets aim for "Three Nines" (99.9%).',
     howToRead: {
       unit: '% (Target >= 99.9%)',
-      healthy: '>= 99.90%: Meeting enterprise Google SRE reliability targets.',
+      healthy: '>= 99.90%: Meeting enterprise reliability targets.',
       warning: '99.00% – 99.89%: Error budget being consumed.',
       critical: '< 99.00%: SLO breach! Immediate engineering attention required.',
     },
@@ -260,11 +260,11 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
   error_budget: {
     id: 'error_budget',
     title: 'Error Budget Remaining (%)',
-    category: 'SRE Golden Signals',
+    category: 'Core Agent Signals',
     themeColor: 'emerald',
     shortDefinition: 'The remaining allowable unreliability buffer for the current 30-day operating window.',
     juniorAdminExplanation:
-      'In Google SRE philosophy, 100% reliability is the wrong target because it stifles innovation. The Error Budget defines how many errors the service is allowed to have before new deployments must be paused to focus on stability.',
+      'In modern software reliability philosophy, 100% reliability is the wrong target because it stifles rapid iteration. The Error Budget defines how many errors the service is allowed to have before new deployments must be paused to focus on stability.',
     howToRead: {
       unit: '% (Remaining Buffer)',
       healthy: '> 70%: Plenty of error budget remaining; safe to deploy.',
@@ -280,7 +280,7 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
   burn_rate: {
     id: 'burn_rate',
     title: 'Error Budget Burn Rate',
-    category: 'SRE Golden Signals',
+    category: 'Core Agent Signals',
     themeColor: 'amber',
     shortDefinition: 'Rate at which the error budget is currently being consumed compared to the allowable baseline rate.',
     juniorAdminExplanation:
@@ -289,7 +289,7 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
       unit: 'Multiplier (x)',
       healthy: '< 1.0x: Sustainable error consumption.',
       warning: '1.0x – 2.5x: Faster than acceptable; investigate root cause.',
-      critical: '> 3.0x: Rapid budget burn; triggers SRE pager alerts.',
+      critical: '> 3.0x: Rapid budget burn; triggers on-call automated alerts.',
     },
     whyAiAgentsCare:
       'Alerts operators instantly if an agent starts failing repeatedly before an entire outage unfolds.',
@@ -320,7 +320,7 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
   saturation: {
     id: 'saturation',
     title: 'Resource Saturation (%)',
-    category: 'SRE Golden Signals',
+    category: 'Core Agent Signals',
     themeColor: 'amber',
     shortDefinition: 'Composite metric evaluating CPU capacity, scheduler runqueue wait, and file descriptor limits.',
     juniorAdminExplanation:
@@ -419,12 +419,12 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
 
   chronicle_security: {
     id: 'chronicle_security',
-    title: 'Chronicle Security Sandbox Audits',
+    title: 'Security Sandbox Audits',
     category: 'Security & Audit',
     themeColor: 'rose',
     shortDefinition: 'Kernel-level audit of security violations, unauthorized path accesses, and refused outbound connections.',
     juniorAdminExplanation:
-      'Inspired by Google Chronicle Security Command Center, this audits whether an autonomous agent attempted to access sensitive system files (like `/etc/shadow` or `/proc/kallsyms`) or connect to blocked external IP addresses.',
+      'Enterprise-grade security audit engine that verifies whether an autonomous agent attempted to access sensitive system files (like `/etc/shadow` or `/proc/kallsyms`) or connect to blocked external IP addresses.',
     howToRead: {
       unit: 'Audit Events',
       healthy: '0 Violations: Clean sandboxed execution.',
@@ -444,7 +444,7 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
     themeColor: 'purple',
     shortDefinition: 'High-resolution multi-lane event timeline format fully compatible with ui.perfetto.dev.',
     juniorAdminExplanation:
-      'Perfetto is Google\'s open-source performance instrumentation tool. It displays execution tracks (threads, syscalls, files, and network flows) on a synchronized timeline down to microsecond accuracy.',
+      'Perfetto is an open-source performance instrumentation and trace analysis platform. It displays execution tracks (threads, syscalls, files, and network flows) on a synchronized timeline down to microsecond accuracy.',
     howToRead: {
       unit: 'Timeline Lanes',
       healthy: 'Evenly distributed execution lanes with no prolonged thread locks.',
@@ -459,12 +459,12 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
 
   mql_query: {
     id: 'mql_query',
-    title: 'Cloud Monitoring MQL Engine',
+    title: 'Monitoring Query Language (MQL) Engine',
     category: 'Kernel & eBPF',
     themeColor: 'blue',
-    shortDefinition: 'Google Cloud Monitoring Query Language (MQL) syntax for filtering and aggregating agent telemetry.',
+    shortDefinition: 'Declarative Metrics Query Language (MQL) syntax for filtering and aggregating agent telemetry.',
     juniorAdminExplanation:
-      'MQL is Google\'s declarative query language for cloud observability. It allows writing expressive queries like `fetch process::cpu_utilization | filter comm == "agy" | group_by 1m, mean` to query operational metrics.',
+      'MQL is a declarative query language for systems observability. It allows writing expressive queries like `fetch process::cpu_utilization | filter comm == "agy" | group_by 1m, mean` to query operational metrics.',
     howToRead: {
       unit: 'Query String',
       healthy: 'Presets provided for CPU, Memory, Syscalls, and Storage I/O.',
@@ -472,7 +472,7 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
       critical: 'Syntax errors will show validation hints.',
     },
     whyAiAgentsCare:
-      'Enables enterprise SREs to integrate DrishtiScope telemetry into existing Google Cloud monitoring dashboards and alerting policies.',
+      'Enables platform engineers and operators to integrate DrishtiScope telemetry into existing time-series monitoring dashboards and alerting policies.',
     linuxAdminCommand: 'curl -s http://localhost:8080/api/history?comm=<comm>',
     kernelDataSource: 'DrishtiScope SQLite TSDB query engine',
   },
@@ -620,7 +620,7 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
   ai_workload_radar: {
     id: 'ai_workload_radar',
     title: 'AI Agent Workload Profile (Radar)',
-    category: 'SRE Golden Signals',
+    category: 'Core Agent Signals',
     themeColor: 'purple',
     shortDefinition: 'Multi-dimensional footprint comparing autonomous agent compute, memory, I/O, and syscall intensity against standard daemons.',
     juniorAdminExplanation:
@@ -664,16 +664,157 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
     themeColor: 'cyan',
     shortDefinition: 'Short 16-character task name of the executable stored in task_struct->comm.',
     juniorAdminExplanation:
-      'In Linux, the kernel limits the task name to 16 characters (TASK_COMM_LEN). This is the name shown in top, ps, and /proc/[pid]/comm (e.g. "agy", "node", "python3", "grok"). It is what you match when targeting processes.',
+      'In Linux, the kernel limits the task name to 16 characters (TASK_COMM_LEN). This is the name shown in top, ps, and /proc/[pid]/comm (e.g. "agy", "node", "python3", "grok"). Node-based agents such as GitHub Copilot often report comm as "MainThread" — that name is shared with every VS Code fork and is not unique. For those agents, type a cmdline token in the header filter instead (copilot), which matches /proc/[pid]/cmdline.',
     howToRead: {
       unit: 'String (up to 16 chars)',
-      healthy: 'Matches expected binary name (e.g. agy, python3, go).',
-      warning: 'Truncated names when executable name exceeds 15 characters.',
+      healthy: 'Matches expected binary name (e.g. agy, python3, go) or a cmdline token such as copilot.',
+      warning: 'Generic names (MainThread, node) match many unrelated processes.',
       critical: 'Disguised process names used by malware or unrecognized binaries.',
     },
     whyAiAgentsCare:
-      'DrishtiScope targets agents by their comm name or PID, filtering kernel tracepoints to observe only that specific AI agent.',
-    linuxAdminCommand: 'cat /proc/<PID>/comm',
-    kernelDataSource: '/proc/[pid]/comm and task_struct->comm in eBPF',
+      'DrishtiScope targets agents by comm, PID, or cmdline substring. GitHub Copilot is identified by cmdline containing @github/copilot, not by comm.',
+    linuxAdminCommand: 'cat /proc/<PID>/comm; tr "\\0" " " < /proc/<PID>/cmdline; echo',
+    kernelDataSource: '/proc/[pid]/comm, /proc/[pid]/cmdline, and task_struct->comm in eBPF',
+  },
+
+  latency_quantile_curve: {
+    id: 'latency_quantile_curve',
+    title: 'Syscall Latency Quantile Curve (P50 – P99.9)',
+    category: 'Compute & CPU',
+    themeColor: 'purple',
+    shortDefinition: 'Stepwise distribution curve showing how syscall latency escalates across statistical percentiles.',
+    juniorAdminExplanation:
+      'Rather than relying on misleading single averages, the quantile curve graphs the full latency spectrum: P50 (median), P75, P90, P95, P99, and P99.9. In Linux systems, a steep hockey-stick shape at P99 indicates tail-latency anomalies like disk lock stalls or slow DNS.',
+    howToRead: {
+      unit: 'Microseconds (µs)',
+      healthy: 'P50 < 3µs, P99 < 50µs: Predictable real-time kernel responsiveness.',
+      warning: 'P90 > 25µs or P99 > 150µs: Stalls in epoll or socket buffer allocation.',
+      critical: 'P99.9 > 1,000µs (1ms): Severe thread freezes disrupting agent prompt generation.',
+    },
+    whyAiAgentsCare:
+      'Streaming LLM token generation demands sub-millisecond dispatch. Tail latency spikes cause stuttering during autonomous tool execution.',
+    linuxAdminCommand: 'bpftool prog tracelog or strace -r -p <PID>',
+    kernelDataSource: 'eBPF duration histogram tracking sys_enter to sys_exit timestamp deltas',
+  },
+
+  scheduler_runqueue: {
+    id: 'scheduler_runqueue',
+    title: 'CFS Scheduler Runqueue & Context Switches',
+    category: 'Compute & CPU',
+    themeColor: 'blue',
+    shortDefinition: 'Time runnable threads spend queuing for CPU execution time vs kernel context switch velocity.',
+    juniorAdminExplanation:
+      'When your agent wants to execute code, the Linux Completely Fair Scheduler (CFS) places it on a per-CPU runqueue. If other processes monopolize the CPU, runqueue wait time spikes. Context switches indicate how frequently CPU cores swap out active threads.',
+    howToRead: {
+      unit: 'µs wait / switches per sec',
+      healthy: 'Runqueue < 1.5µs, steady voluntary context switches.',
+      warning: 'Runqueue 1.5 – 10µs: CPU over-subscription or thread contention.',
+      critical: 'Runqueue > 20µs: Severe CPU starvation; threads waiting too long to execute.',
+    },
+    whyAiAgentsCare:
+      'Identifies whether agent slowdown is caused by its own code or by background host contention.',
+    linuxAdminCommand: 'vmstat 1 5 or perf stat -e context-switches,cpu-migrations -p <PID>',
+    kernelDataSource: '/proc/[pid]/status (voluntary_ctxt_switches) and CFS scheduler runqueue wait metrics',
+  },
+
+  net_stream_bidi: {
+    id: 'net_stream_bidi',
+    title: 'Bi-Directional Network Ingress vs Egress',
+    category: 'Network & Sockets',
+    themeColor: 'emerald',
+    shortDefinition: 'Real-time dual stream comparing transmitted prompt payload (TX) against incoming token response stream (RX).',
+    juniorAdminExplanation:
+      'AI agents communicate over network sockets in asymmetric waves: an agent sends a large prompt context (TX burst), then waits and receives a continuous token stream (RX stream). This chart visualizes that back-and-forth conversational heartbeat.',
+    howToRead: {
+      unit: 'Kilobytes/sec (KB/s)',
+      healthy: 'Normal TX bursts followed by smooth RX streaming bands.',
+      warning: 'High TX with zero RX: Potential timeout or dead inference connection.',
+      critical: 'Both TX & RX flatlining: Network disconnection or broken socket pipe.',
+    },
+    whyAiAgentsCare:
+      'Visualizes token streaming responsiveness and detects stalled LLM API connections before socket timeouts occur.',
+    linuxAdminCommand: 'ss -ti -p or iftop -P',
+    kernelDataSource: '/proc/[pid]/net/dev and eBPF socket accounting tracepoints',
+  },
+
+  thread_memory_density: {
+    id: 'thread_memory_density',
+    title: 'Thread Concurrency vs Memory RSS Density',
+    category: 'Processes & Threads',
+    themeColor: 'amber',
+    shortDefinition: 'Correlates worker thread count with physical RAM consumption to detect memory leaks per worker thread.',
+    juniorAdminExplanation:
+      'Each worker thread in Linux allocates its own stack (often 2MB–8MB by default). If you spawn 50 threads, that alone consumes hundreds of megabytes! This chart plots thread count against RSS to show if memory growth is proportional to worker concurrency.',
+    howToRead: {
+      unit: 'Threads vs Megabytes (MiB)',
+      healthy: 'RSS scales linearly with thread worker count and plateaus.',
+      warning: 'RSS continues growing while thread count remains flat (potential heap leak).',
+      critical: 'Exponential memory growth risking Linux OOM Killer termination.',
+    },
+    whyAiAgentsCare:
+      'Helps debug multi-threaded LLM agent executors and prevent out-of-memory kernel termination during long sessions.',
+    linuxAdminCommand: 'ps -o pid,nlwp,rss,vsz,cmd -p <PID>',
+    kernelDataSource: '/proc/[pid]/status (Threads & VmRSS fields)',
+  },
+
+  scratchpad_sandbox: {
+    id: 'scratchpad_sandbox',
+    title: 'Dynamic Graph Scratchpad & Linux Playground',
+    category: 'Compute & CPU',
+    themeColor: 'cyan',
+    shortDefinition: 'Interactive workspace where operators and the AI Copilot can dynamically instantiate custom telemetry visualizations.',
+    juniorAdminExplanation:
+      'Linux provides endless operational dimensions. The Graph Scratchpad lets you generate bespoke charts on the fly — either by clicking quick-preset queries or by asking the AI Copilot to plot specific metrics. Every generated chart is live, interactive, and fully documented!',
+    howToRead: {
+      unit: 'Dynamic Multi-Axis Telemetry',
+      healthy: 'Clean visual correlation between selected Linux performance metrics.',
+      warning: 'Divergent trends reveal hidden system bottlenecks.',
+      critical: 'Anomalous spikes pinpoint exact root causes.',
+    },
+    whyAiAgentsCare:
+      'Empowers operators to probe custom hypotheses during complex incident investigations without writing custom scripts.',
+    linuxAdminCommand: 'curl -s http://localhost:8080/api/history?limit=60 | jq .',
+    kernelDataSource: 'DrishtiScope SQLite TSDB time-series engine with dynamic JSON field extraction',
+  },
+
+  stream_live_pause: {
+    id: 'stream_live_pause',
+    title: 'Live Stream vs Paused Snapshot Mode',
+    category: 'Kernel & eBPF',
+    themeColor: 'amber',
+    shortDefinition: 'Controls whether real-time kernel telemetry continuously updates the UI or pauses at a frozen timestamp for deep inspection.',
+    juniorAdminExplanation:
+      'When in "Live" mode, the eBPF engine and procfs scanner push continuous kernel events over WebSockets every few hundred milliseconds. If something strange flashes on the screen that you want to inspect closely, click "Pause"! The screen will freeze at that exact millisecond so you can read call trees, copy stack traces, or investigate file accesses without the UI jumping or scrolling away.',
+    howToRead: {
+      unit: 'State (Live Streaming vs Paused Freeze)',
+      healthy: 'Live: Continuous sub-second updates reflecting active agent operations.',
+      warning: 'Paused: Telemetry updates suspended in browser; backend continues kernel buffer recording.',
+      critical: 'Stalled: WebSocket disconnected or backend unreachability (check terminal).',
+    },
+    whyAiAgentsCare:
+      'Crucial for debugging fast ephemeral agent actions, such as microsecond tool executions, prompt generation bursts, or permission denial spikes before they roll off the screen.',
+    linuxAdminCommand: 'kill -STOP <PID> (pauses process) / kill -CONT <PID> (resumes process)',
+    kernelDataSource: 'WebSocket streaming broadcast pump & client freeze buffer',
+  },
+
+  time_window_range: {
+    id: 'time_window_range',
+    title: 'Observation Time Window (1m, 5m, 15m, 1h)',
+    category: 'Core Agent Signals',
+    themeColor: 'cyan',
+    shortDefinition: 'The rolling time horizon applied to timeseries graphs, latency waveforms, and network throughput charts.',
+    juniorAdminExplanation:
+      'Just like looking through a camera with different zoom lenses, the time window lets you change your perspective:\n• 1m (Zoomed In): High-resolution view of microsecond latency jitter and rapid tool invocations.\n• 5m (Balanced): Standard operational window to spot recent spikes or resource recovery.\n• 15m (Medium Term): Identifies memory leaks, slow thread pileups, or persistent disk contention.\n• 1h (Long Term): High-level view showing batch runs, training cycles, or multi-step agent reasoning loops.',
+    howToRead: {
+      unit: 'Time Window Range (Minutes / Hours)',
+      healthy: '1m: Ultra-fast diagnosis of current active task.\n5m: Standard dashboard monitoring.',
+      warning: 'Spikes visible across 15m window indicate systemic, non-transient bottlenecks.',
+      critical: 'Upward sloping stair-step pattern over 1h indicates chronic memory leak or file descriptor leak.',
+    },
+    whyAiAgentsCare:
+      'Allows engineers to distinguish between momentary agent reasoning bursts (which normalize in 10-30 seconds) and unconstrained runaway loops that consume resources continuously.',
+    linuxAdminCommand: 'sar -u 1 60 (sample CPU every second for 1 minute) or sar -r 5 12 (memory over 1 hour)',
+    kernelDataSource: 'Ring buffers in agg/snapshot.go and SQLite TSDB rolling time ranges',
   },
 };
+

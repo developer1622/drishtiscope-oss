@@ -14,7 +14,13 @@ function wsURL(): string {
 }
 
 function App() {
-  const { setSnapshot, addEvent, setConnection, setMode, setHello } = useScopeStore();
+  const { setSnapshot, addEvent, setConnection, setMode, setHello, refreshRate } = useScopeStore();
+  const lastUpdateRef = React.useRef<number>(0);
+  const refreshRateRef = React.useRef(refreshRate);
+
+  useEffect(() => {
+    refreshRateRef.current = refreshRate;
+  }, [refreshRate]);
 
   useEffect(() => {
     fetch('/api/snapshot', { headers: apiHeaders() })
@@ -38,9 +44,20 @@ function App() {
           case 'hello':
             setHello(msg.payload as HelloPayload);
             break;
-          case 'snapshot':
-            setSnapshot(msg.payload as Snapshot);
+          case 'snapshot': {
+            const rate = refreshRateRef.current;
+            if (rate === 'manual') {
+              // Ignore automated live pushes in manual mode
+              break;
+            }
+            const minInterval = parseInt(rate, 10) || 2000;
+            const now = Date.now();
+            if (now - lastUpdateRef.current >= minInterval) {
+              lastUpdateRef.current = now;
+              setSnapshot(msg.payload as Snapshot);
+            }
             break;
+          }
           case 'event':
             addEvent(msg.payload as EventRow);
             break;

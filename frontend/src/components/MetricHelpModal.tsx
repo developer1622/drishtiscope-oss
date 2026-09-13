@@ -229,7 +229,9 @@ export function MetricHelpModal() {
 
         {/* Modal Footer */}
         <div className="p-3 sm:p-4 border-t border-border bg-panel2/40 flex items-center justify-between text-xs text-muted">
-          <span className="font-mono text-[11px]">DrishtiScope SRE Metric Encyclopedia</span>
+          <span className="font-mono text-[11px] text-muted">
+            DrishtiScope Metric Encyclopedia · <span className="text-cyan font-medium">💡 In Linux, there is always something to learn!</span>
+          </span>
           <button
             type="button"
             onClick={closeMetricHelp}

@@ -39,3 +39,14 @@ export function fmtRelTime(ts: string): string {
 export function padPid(pid: number): string {
   return pid.toString().padStart(6, ' ');
 }
+
+const COPILOT_CMDLINE =
+  /@github\/copilot|copilot-linux|copilot-darwin|copilot-win32|copilot-language-server/i;
+
+/** Stable agent identity when Linux comm is a generic thread name (e.g. MainThread). */
+export function agentLabel(comm: string, cmdline?: string): string {
+  if (cmdline && COPILOT_CMDLINE.test(cmdline)) {
+    return 'copilot';
+  }
+  return comm;
+}

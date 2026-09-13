@@ -1,5 +1,6 @@
 import React from 'react';
 import { Snapshot } from '../../types/protocol';
+import { useScopeStore } from '../../store/useScopeStore';
 import { Panel } from '../Panel';
 import { MetricHelpButton } from '../MetricHelpModal';
 import { fmtBytes, fmtBps } from '../../utils/format';
@@ -29,6 +30,7 @@ import {
 } from 'lucide-react';
 
 export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
+  const { antiFlicker } = useScopeStore();
   const [selectedMQL, setSelectedMQL] = React.useState<'cpu' | 'mem' | 'syscall' | 'io'>('cpu');
   const kpis = snapshot?.kpis;
   const target = snapshot?.meta?.target;
@@ -36,7 +38,7 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
   const mqlQueries = {
     cpu: `fetch k8s_container | metric 'kubernetes.io/container/cpu/core_usage_time' | filter (resource.container_name == '${target?.comm || "agy"}') | align rate(1m)`,
     mem: `fetch k8s_container | metric 'kubernetes.io/container/memory/resident_set_size' | filter (resource.container_name == '${target?.comm || "agy"}') | align delta(1m)`,
-    syscall: `fetch linux_node | metric 'custom.googleapis.com/drishti/syscalls_rate' | filter (metadata.comm == '${target?.comm || "agy"}') | align rate(5s)`,
+    syscall: `fetch linux_node | metric 'metrics.drishti.io/drishti/syscalls_rate' | filter (metadata.comm == '${target?.comm || "agy"}') | align rate(5s)`,
     io: `fetch storage_device | metric 'kubernetes.io/container/disk/io_service_bytes' | filter (resource.container_name == '${target?.comm || "agy"}') | align rate(1m)`,
   };
 
@@ -152,13 +154,13 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-full">
-      {/* Google Cloud Monitoring MQL Query Console */}
+      {/* Metrics Query Language (MQL) Console */}
       <div className="bg-panel border border-border rounded-xl p-4 flex flex-col gap-3 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#4285F4]" />
-            <h2 className="text-sm font-bold text-txt font-mono">Google Cloud Monitoring: MQL Query Editor</h2>
-            <MetricHelpButton metricId="mql_query" color="blue" size={13} title="Google Cloud Monitoring MQL Query Engine" />
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan" />
+            <h2 className="text-sm font-bold text-txt font-mono">Metrics Query Language (MQL) Console</h2>
+            <MetricHelpButton metricId="mql_query" color="blue" size={13} title="Metrics Query Language (MQL) Engine" />
             <span className="text-[10px] px-2 py-0.5 rounded bg-panel2 text-muted border border-border font-mono">
               Monarch TSDB
             </span>
@@ -276,6 +278,7 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
                     outerRadius={80}
                     paddingAngle={3}
                     dataKey="value"
+                    isAnimationActive={!antiFlicker}
                   >
                     {syscallCategoryData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -325,6 +328,7 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
                     outerRadius={75}
                     paddingAngle={4}
                     dataKey="value"
+                    isAnimationActive={!antiFlicker}
                   >
                     {memoryBreakdownData.map((entry, index) => (
                       <Cell key={`cell-mem-${index}`} fill={entry.color} />
@@ -381,9 +385,9 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                <Bar yAxisId="left" dataKey="readKb" name="Read KB/s" fill="#3dd68c" radius={[4, 4, 0, 0]} />
-                <Bar yAxisId="left" dataKey="writeKb" name="Write KB/s" fill="#3ce0cf" radius={[4, 4, 0, 0]} />
-                <Line yAxisId="right" type="monotone" dataKey="iops" name="Est. IOPS" stroke="#f5b942" strokeWidth={2} dot={false} />
+                <Bar yAxisId="left" dataKey="readKb" name="Read KB/s" fill="#3dd68c" radius={[4, 4, 0, 0]} isAnimationActive={!antiFlicker} />
+                <Bar yAxisId="left" dataKey="writeKb" name="Write KB/s" fill="#3ce0cf" radius={[4, 4, 0, 0]} isAnimationActive={!antiFlicker} />
+                <Line yAxisId="right" type="monotone" dataKey="iops" name="Est. IOPS" stroke="#f5b942" strokeWidth={2} dot={false} isAnimationActive={!antiFlicker} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -411,8 +415,8 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                <Line type="monotone" dataKey="ctxSwitchesPerSec" name="Ctx Switches/s" stroke="#a855f7" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="threads" name="Active Threads" stroke="#3ce0cf" strokeWidth={1.5} dot={false} />
+                <Line type="monotone" dataKey="ctxSwitchesPerSec" name="Ctx Switches/s" stroke="#a855f7" strokeWidth={2} dot={false} isAnimationActive={!antiFlicker} />
+                <Line type="monotone" dataKey="threads" name="Active Threads" stroke="#3ce0cf" strokeWidth={1.5} dot={false} isAnimationActive={!antiFlicker} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -440,10 +444,10 @@ export function AdvancedTab({ snapshot }: { snapshot: Snapshot | null }) {
                 }}
               />
               <Legend wrapperStyle={{ fontSize: '11px' }} />
-              <Bar dataKey="Established" stackId="a" fill="#3dd68c" />
-              <Bar dataKey="Time Wait" stackId="a" fill="#8b95a8" />
-              <Bar dataKey="Close Wait" stackId="a" fill="#f5b942" />
-              <Bar dataKey="Listen" stackId="a" fill="#3ce0cf" />
+              <Bar dataKey="Established" stackId="a" fill="#3dd68c" isAnimationActive={!antiFlicker} />
+              <Bar dataKey="Time Wait" stackId="a" fill="#8b95a8" isAnimationActive={!antiFlicker} />
+              <Bar dataKey="Close Wait" stackId="a" fill="#f5b942" isAnimationActive={!antiFlicker} />
+              <Bar dataKey="Listen" stackId="a" fill="#3ce0cf" isAnimationActive={!antiFlicker} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

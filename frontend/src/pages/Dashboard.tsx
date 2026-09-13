@@ -6,7 +6,11 @@ import { BasicTab } from '../components/tabs/BasicTab';
 import { MediumTab } from '../components/tabs/MediumTab';
 import { AdvancedTab } from '../components/tabs/AdvancedTab';
 import { CompletePictureTab } from '../components/tabs/CompletePictureTab';
+import { StoryTab } from '../components/tabs/StoryTab';
+import { TabBanner } from '../components/TabBanner';
+import { GraphScratchpad } from '../components/GraphScratchpad';
 import { MetricHelpModal } from '../components/MetricHelpModal';
+import { ChatDrawer } from '../components/ChatDrawer';
 import { apiHeaders } from '../utils/api';
 
 export function Dashboard() {
@@ -57,7 +61,9 @@ export function Dashboard() {
   const targetProcess = (snapshot?.processes || []).find(
     (p) =>
       (target?.pid && p.pid === target.pid) ||
-      (target?.comm && p.comm.toLowerCase() === target.comm.toLowerCase())
+      (target?.comm && p.comm.toLowerCase() === target.comm.toLowerCase()) ||
+      (target?.comm &&
+        (p.cmdline || '').toLowerCase().includes(target.comm.toLowerCase()))
   );
 
   return (
@@ -71,20 +77,14 @@ export function Dashboard() {
         onTargetSelect={handleTargetChange}
       />
 
-      {mode === 'mock' && (
-        <div className="bg-amber/15 text-amber text-center text-xs py-1 px-4 font-mono uppercase tracking-wider font-semibold border-b border-amber/20 flex items-center justify-center gap-2">
-          <span>⚡ MOCK ENGINE ACTIVE</span>
-          <span className="opacity-40">|</span>
-          <span>
-            {hello?.ebpf_fail_reason
-              ? `eBPF notice: ${hello.ebpf_fail_reason}`
-              : `Observing ${targetLabel || 'agy'} — Select process or click row to switch focus`}
-          </span>
-        </div>
-      )}
-
       {/* Responsive Main Container */}
-      <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-5 flex flex-col gap-4 min-h-0 w-full max-w-full">
+      <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-5 flex flex-col gap-4 min-h-0 w-full max-w-full pb-14">
+        {/* Tab Purpose Explanation Banner */}
+        <TabBanner activeTab={activeTab} />
+        {activeTab === 'story' && (
+          <StoryTab snapshot={snapshot} events={events} targetProcess={targetProcess} />
+        )}
+
         {activeTab === 'basic' && (
           <BasicTab snapshot={snapshot} targetProcess={targetProcess} />
         )}
@@ -107,10 +107,14 @@ export function Dashboard() {
         {activeTab === 'complete' && (
           <CompletePictureTab snapshot={snapshot} events={events} />
         )}
+
+        {/* Dynamic Graph Scratchpad & Linux Playground */}
+        <GraphScratchpad snapshot={snapshot} />
       </main>
 
       <StatusBar meta={snapshot?.meta} schema={hello?.schema} />
       <MetricHelpModal />
+      <ChatDrawer />
     </div>
   );
 }

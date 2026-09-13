@@ -1,9 +1,10 @@
 import React from 'react';
 import { ProcessRow } from '../types/protocol';
-import { fmtPct, fmtBytes, padPid } from '../utils/format';
+import { fmtPct, fmtBytes, padPid, agentLabel } from '../utils/format';
 import { Badge } from './Badge';
 import { Crosshair } from 'lucide-react';
 import { MetricHelpButton } from './MetricHelpModal';
+import { useScopeStore } from '../store/useScopeStore';
 
 export function ProcessTable({
   processes,
@@ -18,12 +19,27 @@ export function ProcessTable({
   onSelect: (pid: number) => void;
   onTarget?: (comm: string, pid: number) => void;
 }) {
-  const sorted = [...processes].sort((a, b) => b.cpu_pct - a.cpu_pct);
+  const { antiFlicker } = useScopeStore();
+
+  // If antiFlicker is active, sort target first, then stably by PID to prevent jitter
+  const sorted = [...processes].sort((a, b) => {
+    if (antiFlicker) {
+      const aIsTarget = activeTargetComm && (a.comm === activeTargetComm || agentLabel(a.comm, a.cmdline).toLowerCase() === activeTargetComm.toLowerCase());
+      const bIsTarget = activeTargetComm && (b.comm === activeTargetComm || agentLabel(b.comm, b.cmdline).toLowerCase() === activeTargetComm.toLowerCase());
+      if (aIsTarget && !bIsTarget) return -1;
+      if (!aIsTarget && bIsTarget) return 1;
+      return a.pid - b.pid;
+    }
+    return b.cpu_pct - a.cpu_pct;
+  });
 
   const handleRowClick = (p: ProcessRow) => {
     onSelect(p.pid);
     if (onTarget) {
-      onTarget(p.comm, p.pid);
+      const label = agentLabel(p.comm, p.cmdline);
+      // Cmdline-derived labels (copilot) must stay pid=0 so the backend
+      // rediscovers the process after VS Code restarts it.
+      onTarget(label, label !== p.comm ? 0 : p.pid);
     }
   };
 
@@ -86,10 +102,14 @@ export function ProcessTable({
             </tr>
           )}
           {sorted.map((p) => {
+            const label = agentLabel(p.comm, p.cmdline);
             const isTarget =
-              activeTargetComm &&
+              !!activeTargetComm &&
               (p.comm === activeTargetComm ||
-                p.comm.toLowerCase() === activeTargetComm.toLowerCase());
+                p.comm.toLowerCase() === activeTargetComm.toLowerCase() ||
+                label.toLowerCase() === activeTargetComm.toLowerCase() ||
+                (!!p.cmdline &&
+                  p.cmdline.toLowerCase().includes(activeTargetComm.toLowerCase())));
             const isSelected = p.pid === selectedPid || isTarget;
             const stateColor =
               p.state === 'R'
@@ -114,11 +134,14 @@ export function ProcessTable({
                   {padPid(p.pid)}
                 </td>
                 <td
-                  className="py-1.5 px-3 font-mono text-txt truncate max-w-[140px] font-medium"
+                  className="py-1.5 px-3 font-mono text-txt truncate max-w-[180px] font-medium"
                   title={p.cmdline || p.comm}
                 >
                   <div className="flex items-center gap-1.5">
-                    {p.comm}
+                    <span className="truncate">{label}</span>
+                    {label !== p.comm && (
+                      <span className="text-[10px] text-muted font-normal shrink-0">{p.comm}</span>
+                    )}
                     {isTarget && (
                       <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan/20 text-cyan border border-cyan/40">
                         TARGET
@@ -144,14 +167,15 @@ export function ProcessTable({
                       e.stopPropagation();
                       handleRowClick(p);
                     }}
-                    className={`text-[11px] font-mono px-2 py-0.5 rounded border transition-all flex items-center gap-1 mx-auto ${
+                    title={isTarget ? `Currently observed active agent: ${label}` : `Click to switch active focus to ${label} (PID ${p.pid})`}
+                    className={`text-[11px] font-mono px-2.5 py-1 rounded-md border transition-all flex items-center gap-1.5 mx-auto ${
                       isTarget
-                        ? 'bg-cyan/10 border-cyan text-cyan'
-                        : 'border-border text-muted hover:border-cyan hover:text-txt group-hover:border-border/80'
+                        ? 'bg-cyan/20 border-cyan/50 text-cyan font-bold shadow-sm'
+                        : 'bg-panel2 border-border text-muted hover:border-cyan/50 hover:text-txt hover:bg-cyan/10'
                     }`}
                   >
-                    <Crosshair size={11} />
-                    {isTarget ? 'Active' : 'Pick'}
+                    <Crosshair size={12} className={isTarget ? 'text-cyan animate-pulse' : 'text-muted'} />
+                    <span>{isTarget ? 'Active' : 'Set Active'}</span>
                   </button>
                 </td>
               </tr>

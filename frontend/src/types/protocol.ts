@@ -2,7 +2,7 @@ export interface WsMessage {
   v: number;
   kind: 'hello' | 'snapshot' | 'event' | 'heartbeat' | 'error';
   ts: string;
-  mode: 'ebpf' | 'mock';
+  mode: 'ebpf' | 'real' | 'mock';
   payload: HelloPayload | Snapshot | EventRow | HeartbeatPayload | null;
 }
 
