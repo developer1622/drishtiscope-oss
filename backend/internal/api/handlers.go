@@ -404,7 +404,7 @@ func (s *Server) handlePerfettoTraces(w http.ResponseWriter, r *http.Request) {
 		"displayTimeUnit":   "ns",
 		"systemTraceEvents": nil,
 		"otherData": map[string]any{
-			"version": "Google Perfetto / Chrome Trace Format v1",
+			"version": "Perfetto Open Trace Format v1",
 			"source":  "DrishtiScope eBPF Kernel Observer",
 			"target":  comm,
 		},
@@ -458,7 +458,7 @@ func (s *Server) handleCloudLogging(w http.ResponseWriter, r *http.Request) {
 				InsertID:  ev.ID,
 				Timestamp: ev.TS,
 				Severity:  sev,
-				LogName:   fmt.Sprintf("projects/google-internal-sre/logs/drishti-kernel-%s", comm),
+				LogName:   fmt.Sprintf("projects/drishti-core-sre/logs/drishti-kernel-%s", comm),
 				Resource:  resource,
 				TextPayload: fmt.Sprintf("[%s] %s: %s", strings.ToUpper(ev.Category), ev.Title, ev.Detail),
 				JSONPayload: map[string]any{
@@ -469,7 +469,7 @@ func (s *Server) handleCloudLogging(w http.ResponseWriter, r *http.Request) {
 					"detail":   ev.Detail,
 					"attrs":    ev.Attrs,
 				},
-				Trace: fmt.Sprintf("projects/google-internal-sre/traces/%016x", ev.PID*100000+len(ev.Title)),
+				Trace: fmt.Sprintf("projects/drishti-core-sre/traces/%016x", ev.PID*100000+len(ev.Title)),
 			})
 		}
 	} else {
@@ -477,7 +477,7 @@ func (s *Server) handleCloudLogging(w http.ResponseWriter, r *http.Request) {
 			InsertID:  "boot-1",
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Severity:  "NOTICE",
-			LogName:   fmt.Sprintf("projects/google-internal-sre/logs/drishti-kernel-%s", comm),
+			LogName:   fmt.Sprintf("projects/drishti-core-sre/logs/drishti-kernel-%s", comm),
 			Resource:  resource,
 			TextPayload: fmt.Sprintf("DrishtiScope kernel observer active for %s (PID %d)", comm, pid),
 			JSONPayload: map[string]any{

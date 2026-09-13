@@ -65,6 +65,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("/metrics", get(s.handlePrometheusMetrics))
 	mux.HandleFunc("/api/v1/traces/perfetto", get(s.handlePerfettoTraces))
 	mux.HandleFunc("/api/v1/logs", get(s.handleCloudLogging))
+	mux.HandleFunc("/api/v1/chat", post(s.handleChat))
 	mux.HandleFunc("/api/meta", get(s.handleMeta))
 	mux.HandleFunc("/api/snapshot", get(s.handleSnapshot))
 	mux.HandleFunc("/api/target", post(s.handleTarget))

@@ -3,6 +3,7 @@ package enrich
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -55,6 +56,42 @@ func TestResolveTargets(t *testing.T) {
 		if len(byComm) == 0 {
 			t.Logf("comm %q had no matches", selfInfo.Comm)
 		}
+	}
+}
+
+func TestResolveTargetsCmdlineFallback(t *testing.T) {
+	selfPID := os.Getpid()
+	selfInfo, err := ReadProcessInfo(selfPID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if selfInfo.Cmdline == "" {
+		t.Skip("empty cmdline")
+	}
+
+	// Go test binaries always get -test.* flags; comm is the binary name.
+	const token = "-test."
+	if !strings.Contains(selfInfo.Cmdline, token) {
+		t.Skipf("cmdline %q does not contain %q", selfInfo.Cmdline, token)
+	}
+	if strings.HasPrefix(selfInfo.Comm, token) {
+		t.Skipf("comm %q already matches token, cannot test fallback", selfInfo.Comm)
+	}
+
+	got := ResolveTargets(0, token)
+	found := false
+	for _, p := range got {
+		if p == selfPID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected self pid %d via cmdline fallback, got %v (comm=%q cmdline=%q)", selfPID, got, selfInfo.Comm, selfInfo.Cmdline)
+	}
+
+	if got := ResolveTargets(0, "zzz-no-such-cmdline-token-xyz"); len(got) != 0 {
+		t.Fatalf("expected empty for missing cmdline token, got %v", got)
 	}
 }
 

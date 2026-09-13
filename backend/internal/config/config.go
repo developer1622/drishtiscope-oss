@@ -14,7 +14,7 @@ const (
 	DefaultHTTPAddr    = ":8080"
 	DefaultComm        = "agy"
 	DefaultMode        = "auto"
-	DefaultSnapshotMs  = 400
+	DefaultSnapshotMs  = 1500
 	DefaultDBPath      = "drishtiscope.db"
 	MaxCommLen         = 15 // TASK_COMM_LEN-1
 	MaxPID             = 4_194_304
@@ -120,9 +120,9 @@ func (c *Config) normalize() {
 // Validate returns a user-facing error if the config cannot be used.
 func (c *Config) Validate() error {
 	switch c.Mode {
-	case "auto", "ebpf", "mock":
+	case "auto", "ebpf", "real", "mock":
 	default:
-		return fmt.Errorf("invalid mode %q (want auto|ebpf|mock)", c.Mode)
+		return fmt.Errorf("invalid mode %q (want auto|ebpf|real|mock)", c.Mode)
 	}
 	if c.HttpAddr == "" {
 		return fmt.Errorf("http listen address is empty")
@@ -145,7 +145,7 @@ func (c *Config) ParseFlags() {
 		comm := c.targetComm
 		insecure := c.AllowInsecureWS
 		flag.StringVar(&c.HttpAddr, "addr", c.HttpAddr, "HTTP/WS listen address")
-		flag.StringVar(&c.Mode, "mode", c.Mode, "auto | ebpf | mock")
+		flag.StringVar(&c.Mode, "mode", c.Mode, "auto | ebpf | real | mock")
 		flag.StringVar(&comm, "comm", comm, "process comm prefix to watch")
 		flag.IntVar(&pid, "pid", pid, "process pid to watch (0 = match by comm)")
 		flag.IntVar(&c.SnapshotMs, "snapshot-ms", c.SnapshotMs, "snapshot interval in milliseconds")

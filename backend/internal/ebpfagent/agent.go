@@ -157,7 +157,7 @@ type bpfIterator interface {
 // Returns a cleanup func and nil error on success, or nil func + error on failure.
 func TryLoad(cfg *config.Config, snapshots chan<- *agg.Snapshot, events chan<- agg.EventRow) (func(), error) {
 	if err := rlimit.RemoveMemlock(); err != nil {
-		return nil, fmt.Errorf("remove memlock: %w", err)
+		log.Printf("rlimit.RemoveMemlock: %v (continuing, kernel >= 5.11 uses cgroups for BPF memory)", err)
 	}
 
 	spec, err := ebpf.LoadCollectionSpecFromReader(bytes.NewReader(bpfObject))

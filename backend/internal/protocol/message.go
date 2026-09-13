@@ -19,6 +19,7 @@ const (
 
 const (
 	ModeEBPF = "ebpf"
+	ModeReal = "real"
 	ModeMock = "mock"
 )
 
@@ -84,7 +85,7 @@ func ValidKind(kind string) bool {
 
 func ValidMode(mode string) bool {
 	switch mode {
-	case ModeEBPF, ModeMock, "auto":
+	case ModeEBPF, ModeReal, ModeMock, "auto":
 		return true
 	default:
 		return false

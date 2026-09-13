@@ -16,6 +16,7 @@ import (
 	"github.com/agentscope/agentscope/internal/hub"
 	"github.com/agentscope/agentscope/internal/mock"
 	"github.com/agentscope/agentscope/internal/protocol"
+	"github.com/agentscope/agentscope/internal/realengine"
 	"github.com/agentscope/agentscope/internal/storage"
 )
 
@@ -63,29 +64,40 @@ func runApp(ctx context.Context, cfg *config.Config) error {
 	snapshots := make(chan *agg.Snapshot, 32)
 	events := make(chan agg.EventRow, 512)
 
-	mode := protocol.ModeMock
+	mode := protocol.ModeReal
 	var modeReason string
 	var cleanup func()
 
-	if cfg.Mode != "mock" {
+	if cfg.Mode == "mock" {
+		mode = protocol.ModeMock
+		go mock.NewMockGenerator(cfg).Run(runCtx, snapshots, events)
+	} else if cfg.Mode == "ebpf" {
 		cfn, err := ebpfagent.TryLoad(cfg, snapshots, events)
 		if err != nil {
-			modeReason = err.Error()
-			log.Printf("eBPF load failed (%v), falling back to mock mode", err)
-			if cfg.Mode == "ebpf" {
-				return err
-			}
-		} else {
+			return err
+		}
+		cleanup = cfn
+		mode = protocol.ModeEBPF
+	} else if cfg.Mode == "real" {
+		mode = protocol.ModeReal
+		go realengine.NewEngine(cfg).Run(runCtx, snapshots, events)
+	} else {
+		// Default mode: "auto"
+		// Attempt eBPF probe attachment first; if unprivileged or fails, run RealEngine Linux /proc collector
+		cfn, err := ebpfagent.TryLoad(cfg, snapshots, events)
+		if err == nil {
 			cleanup = cfn
 			mode = protocol.ModeEBPF
+			log.Printf("eBPF kernel probes successfully loaded and attached to kernel tracepoints")
+		} else {
+			modeReason = err.Error()
+			mode = protocol.ModeReal
+			log.Printf("eBPF probe attach requires CAP_BPF/root (%v); active in Real-Time Linux /proc Engine (mode=real)", err)
+			go realengine.NewEngine(cfg).Run(runCtx, snapshots, events)
 		}
 	}
 	if cleanup != nil {
 		defer cleanup()
-	}
-
-	if mode == protocol.ModeMock {
-		go mock.NewMockGenerator(cfg).Run(runCtx, snapshots, events)
 	}
 
 	var wg sync.WaitGroup

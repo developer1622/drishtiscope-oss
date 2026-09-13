@@ -165,7 +165,48 @@ func getMockProcessList() []procTemplate {
 			BaseRSS: 84 * 1024 * 1024,
 			OpenFDs: 54,
 		},
+		{
+			PID:     58785,
+			TGID:    58785,
+			PPID:    58741,
+			Comm:    "MainThread",
+			Cmdline: "/home/ramum/.vscode-server/bin/node /home/ramum/.vscode-server/bin/node_modules/@github/copilot-linux-x64/index.js --headless --stdio --no-auto-login",
+			Exe:     "/home/ramum/.vscode-server/bin/node",
+			State:   "S",
+			BaseCPU: 6.2,
+			Threads: 20,
+			BaseRSS: 143 * 1024 * 1024,
+			OpenFDs: 37,
+		},
 	}
+}
+
+func templateMatches(tpl *procTemplate, pid int, comm string) bool {
+	if pid > 0 {
+		return tpl.PID == pid
+	}
+	if comm == "" {
+		return false
+	}
+	lc := strings.ToLower(comm)
+	if strings.EqualFold(tpl.Comm, comm) || strings.HasPrefix(strings.ToLower(tpl.Comm), lc) {
+		return true
+	}
+	return strings.Contains(strings.ToLower(tpl.Cmdline), lc)
+}
+
+func rowMatchesTarget(p agg.ProcessRow, pid int, comm string) bool {
+	if pid > 0 {
+		return p.PID == pid
+	}
+	if comm == "" {
+		return false
+	}
+	lc := strings.ToLower(comm)
+	if strings.EqualFold(p.Comm, comm) {
+		return true
+	}
+	return strings.Contains(strings.ToLower(p.Cmdline), lc)
 }
 
 func NewMockGenerator(cfg *config.Config) *MockGenerator {
@@ -222,25 +263,29 @@ func (g *MockGenerator) Run(ctx context.Context, snapshots chan<- *agg.Snapshot,
 				currentComm = "agy"
 			}
 
-			// ── Build process table with multiple active processes ──────────
+			// ── Build process table starting with REAL live host processes (codex, agy, copilot) ──
+			realProcesses := scanRealAIProcesses(currentPid, currentComm)
 			templates := getMockProcessList()
 			var processes []agg.ProcessRow
-			var activeTemplate *procTemplate
+			seenPids := make(map[int]bool)
 
+			// 1. Add all real live background processes discovered on the system
+			for _, rp := range realProcesses {
+				processes = append(processes, rp)
+				seenPids[rp.PID] = true
+			}
+
+			// 2. Supplement with template processes if not already covered by a real PID
 			for i := range templates {
 				tpl := &templates[i]
-				// Match active process
-				isTarget := false
-				if currentPid > 0 && tpl.PID == currentPid {
-					isTarget = true
-				} else if currentPid == 0 && (strings.EqualFold(tpl.Comm, currentComm) || strings.HasPrefix(strings.ToLower(tpl.Comm), strings.ToLower(currentComm))) {
-					isTarget = true
+				if seenPids[tpl.PID] {
+					continue
 				}
+				isTarget := templateMatches(tpl, currentPid, currentComm)
 
 				// Calculate oscillating CPU per process
 				var pCpu float64
 				if isTarget {
-					activeTemplate = tpl
 					pCpu = tpl.BaseCPU +
 						10.0*math.Sin(elapsedS/6.0) +
 						4.0*math.Sin(elapsedS/2.5) +
@@ -281,8 +326,15 @@ func (g *MockGenerator) Run(ctx context.Context, snapshots chan<- *agg.Snapshot,
 				})
 			}
 
-			// If target wasn't one of the presets, add a custom row for it
-			if activeTemplate == nil {
+			// If target wasn't found in real processes or templates, add a custom row for it
+			hasTarget := false
+			for _, p := range processes {
+				if rowMatchesTarget(p, currentPid, currentComm) {
+					hasTarget = true
+					break
+				}
+			}
+			if !hasTarget && currentComm != "" {
 				targetPID := currentPid
 				if targetPID <= 0 {
 					targetPID = 31042
@@ -307,21 +359,17 @@ func (g *MockGenerator) Run(ctx context.Context, snapshots chan<- *agg.Snapshot,
 					StartTime: startTime.Format(time.RFC3339),
 				}
 				processes = append([]agg.ProcessRow{customRow}, processes...)
-				activeTemplate = &procTemplate{
-					PID:     targetPID,
-					Comm:    currentComm,
-					BaseCPU: customCpu,
-					Threads: 12,
-					BaseRSS: customRss,
-					OpenFDs: 30,
-				}
 			}
 
 			// Target-specific metrics
 			targetRow := processes[0]
-			for _, p := range processes {
-				if (currentPid > 0 && p.PID == currentPid) || (currentPid == 0 && strings.EqualFold(p.Comm, currentComm)) {
+			for idx, p := range processes {
+				if rowMatchesTarget(p, currentPid, currentComm) {
 					targetRow = p
+					if idx > 0 {
+						// Put target process at top of processes list
+						processes[0], processes[idx] = processes[idx], processes[0]
+					}
 					break
 				}
 			}
@@ -331,9 +379,16 @@ func (g *MockGenerator) Run(ctx context.Context, snapshots chan<- *agg.Snapshot,
 			rssBytes := targetRow.RSSBytes
 			openFDs := targetRow.OpenFDs
 
+			// ── Check if we can collect REAL target metrics from /proc ──────
+			realRBps, realWBps, realFlows, realFiles, hasRealData := readRealTargetMetrics(targetRow.PID)
+
 			// ── IO rates ──────────────────────────────────────────────────
 			rBps := 14240.0 + g.rng.Float64()*180*1024
 			wBps := 6120.0 + g.rng.Float64()*40*1024
+			if hasRealData && (realRBps > 0 || realWBps > 0) {
+				rBps = realRBps
+				wBps = realWBps
+			}
 			g.totalReadBytes += int64(rBps * float64(g.cfg.SnapshotMs) / 1000.0)
 			g.totalWriteBytes += int64(wBps * float64(g.cfg.SnapshotMs) / 1000.0)
 
@@ -343,23 +398,32 @@ func (g *MockGenerator) Run(ctx context.Context, snapshots chan<- *agg.Snapshot,
 			g.totalTxBytes += int64(txBps * float64(g.cfg.SnapshotMs) / 1000.0)
 			g.totalRxBytes += int64(rxBps * float64(g.cfg.SnapshotMs) / 1000.0)
 
-			// ── Update flow byte counters ─────────────────────────────────
-			for i := range g.flows {
-				g.flows[i].Comm = targetRow.Comm
-				g.flows[i].PID = targetRow.PID
-				bTx := int64(g.rng.Float64() * txBps * float64(g.cfg.SnapshotMs) / 1000.0 / float64(len(g.flows)))
-				bRx := int64(g.rng.Float64() * rxBps * float64(g.cfg.SnapshotMs) / 1000.0 / float64(len(g.flows)))
-				g.flows[i].BytesTx += bTx
-				g.flows[i].BytesRx += bRx
+			// ── Update flows ──────────────────────────────────────────────
+			if hasRealData && len(realFlows) > 0 {
+				g.flows = realFlows
+			} else {
+				for i := range g.flows {
+					g.flows[i].Comm = targetRow.Comm
+					g.flows[i].PID = targetRow.PID
+					bTx := int64(g.rng.Float64() * txBps * float64(g.cfg.SnapshotMs) / 1000.0 / float64(len(g.flows)))
+					bRx := int64(g.rng.Float64() * rxBps * float64(g.cfg.SnapshotMs) / 1000.0 / float64(len(g.flows)))
+					g.flows[i].BytesTx += bTx
+					g.flows[i].BytesRx += bRx
+				}
+			}
+
+			// ── File access rates tailored to target ──────────────────────
+			var filesTop []agg.FileStat
+			if hasRealData && len(realFiles) > 0 {
+				filesTop = realFiles
+			} else {
+				filesTop = buildFileStatsForComm(currentComm, g.rng)
 			}
 
 			// ── Syscall rates ─────────────────────────────────────────────
 			totalSyscallRate := 850.0 + cpu*40.0 + g.rng.Float64()*150.0
 			syscallStats := buildSyscallStats(totalSyscallRate, g.rng)
 			errRate := g.rng.Float64() * 0.4
-
-			// ── File access rates tailored to target ──────────────────────
-			filesTop := buildFileStatsForComm(targetRow.Comm, g.rng)
 
 			// ── Update rolling series ─────────────────────────────────────
 			tMs := t.UnixMilli()
@@ -386,6 +450,15 @@ func (g *MockGenerator) Run(ctx context.Context, snapshots chan<- *agg.Snapshot,
 			runqueueLat := 0.85 + (cpu / 100.0 * 1.4)
 			saturationPct := (cpu/100.0)*65.0 + float64(openFDs)/1024.0*35.0
 
+			metaComm := currentComm
+			if metaComm == "" {
+				metaComm = targetRow.Comm
+			}
+			metaPID := currentPid
+			if metaPID == 0 {
+				metaPID = targetRow.PID
+			}
+
 			// ── Assemble snapshot ─────────────────────────────────────────
 			snap := &agg.Snapshot{
 				Meta: agg.SnapshotMeta{
@@ -393,8 +466,8 @@ func (g *MockGenerator) Run(ctx context.Context, snapshots chan<- *agg.Snapshot,
 					EventRate:     totalSyscallRate / 10.0,
 					UptimeS:       elapsedS,
 					Target: agg.Target{
-						PID:  targetRow.PID,
-						Comm: targetRow.Comm,
+						PID:  metaPID,
+						Comm: metaComm,
 					},
 				},
 				Processes: processes,
@@ -604,6 +677,16 @@ func buildSyscallStats(total float64, rng *rand.Rand) []agg.SyscallStat {
 }
 
 func buildFileStatsForComm(comm string, rng *rand.Rand) []agg.FileStat {
+	if strings.Contains(strings.ToLower(comm), "copilot") {
+		return []agg.FileStat{
+			{Path: "/home/ramum/agentscope/frontend/src/pages/Dashboard.tsx", OpsS: 12.4 + rng.Float64()*4, BytesS: 8192 + rng.Float64()*4096, Errors: 0},
+			{Path: "/home/ramum/agentscope/backend/internal/enrich/proc.go", OpsS: 8.1 + rng.Float64()*3, BytesS: 4096 + rng.Float64()*2048, Errors: 0},
+			{Path: "/home/ramum/.copilot/logs/process-58785.log", OpsS: 2.2 + rng.Float64(), BytesS: 512, Errors: 0},
+			{Path: "/home/ramum/.vscode-server/data/logs/remoteagent.log", OpsS: 4.0 + rng.Float64()*2, BytesS: 1024, Errors: 0},
+			{Path: "/proc/self/status", OpsS: 6.0 + rng.Float64()*2, BytesS: 256, Errors: 0},
+			{Path: "/etc/passwd", OpsS: 0.1, BytesS: 0, Errors: 1},
+		}
+	}
 	if strings.EqualFold(comm, "agy") || strings.Contains(strings.ToLower(comm), "agy") {
 		return []agg.FileStat{
 			{Path: "/home/ramum/.gemini/antigravity-cli/brain/transcript.jsonl", OpsS: 18.5 + rng.Float64()*6, BytesS: 16384 + rng.Float64()*8192, Errors: 0},

@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"math/rand"
+	"strings"
 	"testing"
 	"time"
 
@@ -35,6 +36,49 @@ func TestMockGeneratorWithCustomTargetComm(t *testing.T) {
 		}
 		if snap.Processes[0].Comm != "custom-worker" {
 			t.Fatalf("expected custom-worker as first row, got %s", snap.Processes[0].Comm)
+		}
+	case <-ctx.Done():
+		t.Fatal("timeout waiting for snapshot")
+	}
+}
+
+func TestMockGeneratorCopilotCmdlineTarget(t *testing.T) {
+	cfg := config.Load()
+	cfg.SnapshotMs = 20
+	if err := cfg.SetTarget(0, "copilot"); err != nil {
+		t.Fatal(err)
+	}
+
+	g := NewMockGenerator(cfg)
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	snaps := make(chan *agg.Snapshot, 10)
+	evts := make(chan agg.EventRow, 32)
+	go g.Run(ctx, snaps, evts)
+
+	select {
+	case snap := <-snaps:
+		if snap.Meta.Target.Comm != "copilot" {
+			t.Fatalf("expected filter comm copilot, got %s", snap.Meta.Target.Comm)
+		}
+		found := false
+		for _, p := range snap.Processes {
+			if strings.Contains(strings.ToLower(p.Cmdline), "copilot") {
+				found = true
+				if p.PID != 58785 {
+					t.Fatalf("expected copilot pid 58785, got %d", p.PID)
+				}
+				if p.Comm != "MainThread" {
+					t.Fatalf("expected kernel comm MainThread, got %s", p.Comm)
+				}
+			}
+		}
+		if !found {
+			t.Fatal("expected a process whose cmdline contains copilot")
+		}
+		if snap.Meta.Target.PID != 58785 {
+			t.Fatalf("expected resolved pid 58785, got %d", snap.Meta.Target.PID)
 		}
 	case <-ctx.Done():
 		t.Fatal("timeout waiting for snapshot")

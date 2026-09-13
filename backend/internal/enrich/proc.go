@@ -37,6 +37,9 @@ func ClockTicks() int64 {
 
 // ResolveTargets returns PIDs to watch: an explicit pid (plus children),
 // or every process whose comm starts with prefix (plus children).
+// If no comm matches, the prefix is treated as a case-insensitive substring
+// of /proc/<pid>/cmdline so agents like GitHub Copilot (comm=MainThread,
+// cmdline contains @github/copilot-linux-x64) can still be targeted.
 func ResolveTargets(pid int, commPrefix string) []int {
 	if pid > 0 {
 		if _, err := os.Stat(fmt.Sprintf("/proc/%d", pid)); err != nil {
@@ -48,6 +51,9 @@ func ResolveTargets(pid int, commPrefix string) []int {
 		return nil
 	}
 	roots := findByComm(commPrefix)
+	if len(roots) == 0 {
+		roots = findByCmdline(commPrefix)
+	}
 	if len(roots) == 0 {
 		return nil
 	}
@@ -70,6 +76,33 @@ func findByComm(prefix string) []int {
 			continue
 		}
 		if strings.HasPrefix(strings.TrimSpace(string(b)), prefix) {
+			out = append(out, pid)
+		}
+	}
+	return out
+}
+
+func findByCmdline(substr string) []int {
+	if substr == "" {
+		return nil
+	}
+	needle := strings.ToLower(substr)
+	ents, err := os.ReadDir("/proc")
+	if err != nil {
+		return nil
+	}
+	var out []int
+	for _, e := range ents {
+		pid, ok := parsePIDName(e.Name())
+		if !ok {
+			continue
+		}
+		b, err := os.ReadFile(fmt.Sprintf("/proc/%d/cmdline", pid))
+		if err != nil || len(b) == 0 {
+			continue
+		}
+		cmd := strings.ToLower(strings.ReplaceAll(string(b), "\x00", " "))
+		if strings.Contains(cmd, needle) {
 			out = append(out, pid)
 		}
 	}
@@ -115,7 +148,18 @@ func expandDescendants(roots []int) []int {
 		}
 	}
 	out := make([]int, 0, len(want))
+	seen := make(map[int]struct{}, len(roots))
+	for _, r := range roots {
+		if _, ok := want[r]; !ok {
+			continue
+		}
+		out = append(out, r)
+		seen[r] = struct{}{}
+	}
 	for pid := range want {
+		if _, ok := seen[pid]; ok {
+			continue
+		}
 		out = append(out, pid)
 	}
 	return out
