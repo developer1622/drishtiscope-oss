@@ -191,12 +191,12 @@ export function MetricHelpModal() {
             <p className="text-txt/90 text-xs sm:text-sm leading-relaxed">{doc.whyAiAgentsCare}</p>
           </div>
 
-          {/* Junior Admin Linux Command Line Cheat Sheet */}
+          {/* Linux Command Cheat Sheet */}
           <div className="bg-black/40 border border-border rounded-xl p-3.5 sm:p-4">
             <div className="flex items-center justify-between text-xs font-mono text-muted mb-2">
               <span className="flex items-center gap-1.5">
                 <Terminal size={14} className="text-green" />
-                <span>Junior Linux Admin Terminal Command</span>
+                <span>Linux Command</span>
               </span>
               <button
                 type="button"

@@ -144,7 +144,7 @@ Open `http://localhost:5173` in your browser. The Vite dev server will connect t
 
 ## ❓ Adding New Metrics to the Metric Encyclopedia
 
-DrishtiScope features a built-in, junior-friendly **Metric Encyclopedia Modal** accessible via colorful question mark badges throughout the dashboard.
+DrishtiScope features a built-in, engineer-friendly **Metric Encyclopedia Modal** accessible via colorful question mark badges throughout the dashboard.
 
 To add or update metric explanations:
 1. Open `frontend/src/data/metricDocs.ts`.
@@ -156,7 +156,7 @@ To add or update metric explanations:
      category: 'Core Agent Signals' | 'Compute & CPU' | 'Memory & RAM' | 'Storage & Disk' | 'Network & Sockets' | 'Processes & Threads' | 'Security & Audit' | 'Kernel & eBPF';
      themeColor: 'cyan' | 'blue' | 'emerald' | 'amber' | 'rose' | 'purple';
      shortDefinition: string;
-     juniorAdminExplanation: string; // Plain-English analogy for junior engineers
+     juniorAdminExplanation: string; // Plain-English analogy for engineers
      howToRead: {
        unit: string;
        healthy: string;
@@ -164,7 +164,7 @@ To add or update metric explanations:
        critical: string;
      };
      whyAiAgentsCare: string; // Why this matters specifically for LLMs/Agents
-     linuxAdminCommand: string; // Copyable terminal command to verify independently
+     linuxAdminCommand: string; // Copyable Linux command to verify independently
      kernelDataSource: string; // Kernel file or eBPF probe source
    }
    ```

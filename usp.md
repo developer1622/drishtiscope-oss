@@ -85,7 +85,7 @@ The 2025–2026 research literature calls this the **semantic gap**: application
 │  Needs: cluster / root / DaemonSet, not agent-aware                      │
 │  Sees:  HTTP, syscalls, service maps, security rules                     │
 │  Misses: agent identity, process story, coding-agent verdicts,           │
-│          junior-admin metric encyclopedia, single-binary laptop use      │
+│          Linux metric encyclopedia, single-binary laptop use             │
 └──────────────────────────────────────────────────────────────────────────┘
                                     │
                                     │  the missing product
@@ -255,7 +255,7 @@ Everything else in Layer C is a session-file TUI or a spend dashboard.
 | Update cadence | **~400 ms WebSocket** | Live TUI / record | Seconds–minutes | In-cluster live / scrape | Event stream | 1 s TUI | 10–60 s |
 | Prometheus `/metrics` | **Yes** | Limited | Via OTel | Yes | Via exporters | No | Native |
 | Perfetto export | **Yes** | Flamegraphs / pprof | No | Profiles | No | No | Proprietary |
-| Junior-admin `(?)` encyclopedia | **Yes** | No | Docs site | No | Rule docs | No | Product docs |
+| Linux `(?)` encyclopedia | **Yes** | No | Docs site | No | Rule docs | No | Product docs |
 | Telemetry-aware copilot | **Yes (snapshot injected)** | Secondary LLM on traces | Playgrounds | AI RCA (Coroot/Metoro) | No | No | Bits AI / SRE Agent |
 | Privacy / air-gap | **Local SQLite, no SaaS** | Local SQLite; payloads sensitive | Cloud or self-host stack | In-cluster | Local | Local | Cloud |
 | Root required for full fidelity | Optional | Typical for `record` | n/a | Yes | Yes | No | Agent |
@@ -317,7 +317,7 @@ def my_agent(user_msg: str) -> str:
 | Unit of observation | Cluster / HTTP request | Service / DB | Rule match | **Agent PID** |
 | Install | Helm, privileged | Helm / node agent | DaemonSet + rules | **One binary** |
 | “Tell me the story of PID 14221 (`codex`)” | You write a PxL script | You click a service | You get an alert if a rule fires | **Tab 1 is that story** |
-| Junior admin | PxL, K8s fluency | Service maps | Falco rule syntax | `(?)` encyclopedia + copyable `pidstat` |
+| Linux engineer | PxL, K8s fluency | Service maps | Falco rule syntax | `(?)` encyclopedia + copyable `pidstat` |
 | Security enforcement | No | No | Alert (Falco) / kill (Tetragon) | Audit tab, no inline kill |
 
 ### 5.5 vs cctop / CTOP / OpenLIT coding (the “htop for Claude” crowd)
@@ -380,7 +380,7 @@ An agent was allowed to run `bash`. Security wants an audit.
 | **Phoenix** | No data unless you wrapped the runtime. |
 | **DrishtiScope** | Tab 3 call tree: `runtime.epollwait` vs `regex.Match` vs `syscall.Syscall6`. Tab 2: Traffic RPS high, error ratio 0, saturation CPU 97% → verdict *Active Code Generation*. Perfetto export opens in `ui.perfetto.dev` with syscall + file + socket lanes. Encyclopedia `(?)` on CPU: healthy 5–60%, critical >95%, verify with `pidstat -u 1 5 -p <PID>`. |
 
-**USP in one line:** we translate a hot PID into an execution story a junior admin can verify with stock Linux tools.
+**USP in one line:** we translate a hot PID into an execution story an engineer can verify with stock Linux tools.
 
 ---
 
@@ -547,7 +547,7 @@ THE MOAT (what we will not give up)
   4. Zero-root real mode
   5. Effects, not TLS payloads
   6. Single binary, embedded TSDB
-  7. Teachable (junior-admin encyclopedia)
+  7. Teachable (Linux metric encyclopedia)
 
 TRUE PEER
   AgentSight — use it when you must read prompts off the wire.

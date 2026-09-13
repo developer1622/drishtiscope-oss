@@ -20,7 +20,7 @@
 
 ## 📹 DrishtiScope Showcase Video
 
-Watch the **1080p 60fps Full Walkthrough** of DrishtiScope observing an active autonomous pair-programming agent (`agy` PID 113971), navigating the 5 tabs, testing the 5 themes, and exploring the Junior Admin Metric Encyclopedia:
+Watch the **1080p 60fps Full Walkthrough** of DrishtiScope observing an active autonomous pair-programming agent (`agy` PID 113971), navigating the 5 tabs, testing the 5 themes, and exploring the Linux Metric Encyclopedia:
 
 > 🎬 **Direct Video Downloads**:
 > - **MP4 Video (H.264)**: [videos/drishtiscope_showcase.mp4](videos/drishtiscope_showcase.mp4) (6.5 MB, Full HD 1080p, 60fps)
