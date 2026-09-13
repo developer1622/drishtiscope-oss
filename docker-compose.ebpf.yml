@@ -1,0 +1,15 @@
+# Overlay for real eBPF. Requires Linux, BTF, and privileges.
+#   docker compose -f docker-compose.yml -f docker-compose.ebpf.yml up --build
+#
+# The container shares the host PID namespace so TARGET_COMM=agy can see
+# host processes.
+
+services:
+  agentscope:
+    environment:
+      MODE: auto
+      TARGET_COMM: agy
+    pid: host
+    privileged: true
+    # Uncomment to bind the same network namespace as the host:
+    # network_mode: host

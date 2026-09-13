@@ -249,4 +249,7 @@ func (b *SnapshotBuilder) AddEvent(e EventRow) {
 	if len(b.events) > 300 {
 		b.events = b.events[len(b.events)-300:]
 	}
+	if b.latest != nil {
+		b.latest.Timeline = append([]EventRow(nil), b.events...)
+	}
 }

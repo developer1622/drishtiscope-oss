@@ -3,7 +3,6 @@
 package ebpfagent
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -69,7 +68,7 @@ func TryLoad(cfg *config.Config, snapshots chan<- *agg.Snapshot, events chan<- a
 	// Background worker for Windows eBPF event pump
 	go func() {
 		defer wg.Done()
-		ticker := time.NewTicker(time.Duration(cfg.SnapshotMS) * time.Millisecond)
+		ticker := time.NewTicker(time.Duration(cfg.SnapshotMs) * time.Millisecond)
 		defer ticker.Stop()
 
 		for {

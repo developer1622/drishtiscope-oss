@@ -29,6 +29,12 @@ func main() {
 func run() error {
 	cfg := config.Load()
 	cfg.ParseFlags()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return runApp(ctx, cfg)
+}
+
+func runApp(ctx context.Context, cfg *config.Config) error {
 	if err := cfg.Validate(); err != nil {
 		return err
 	}
@@ -39,11 +45,11 @@ func run() error {
 		log.Printf("WARNING: listening on %s without AUTH_TOKEN; remote clients will receive 403", cfg.HttpAddr)
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
+	runCtx, runCancel := context.WithCancel(ctx)
+	defer runCancel()
 
 	h := hub.NewHub(cfg.MaxWSClients)
-	go h.Run(ctx)
+	go h.Run(runCtx)
 
 	var store storage.Store = storage.Nop{}
 	if db, err := storage.Open(cfg.DBPath); err != nil {
@@ -79,20 +85,21 @@ func run() error {
 	}
 
 	if mode == protocol.ModeMock {
-		go mock.NewMockGenerator(cfg).Run(ctx, snapshots, events)
+		go mock.NewMockGenerator(cfg).Run(runCtx, snapshots, events)
 	}
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		fanout(ctx, h, builder, store, snapshots, events, mode)
+		fanout(runCtx, h, builder, store, snapshots, events, mode)
 	}()
 
 	srv := api.NewServer(cfg, h, builder, mode, modeReason, store)
 	log.Printf("DrishtiScope listening on %s (mode=%s comm=%q pid=%d db=%q)",
 		cfg.HttpAddr, mode, cfg.TargetComm(), cfg.TargetPID(), cfg.DBPath)
-	err := srv.Start(ctx)
+	err := srv.Start(runCtx)
+	runCancel()
 	wg.Wait()
 	if err != nil && !errors.Is(err, context.Canceled) {
 		return err

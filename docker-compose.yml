@@ -1,0 +1,26 @@
+# AgentScope — mock-mode demo. No root, no eBPF kernel features required.
+#   docker compose up --build
+# Then open http://localhost:8080
+#
+# Real eBPF (Linux host, privileged):
+#   docker compose -f docker-compose.yml -f docker-compose.ebpf.yml up --build
+
+services:
+  agentscope:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      MODE: mock
+      HTTP_ADDR: ":8080"
+      TARGET_COMM: agy
+      SNAPSHOT_MS: "400"
+      STATIC_DIR: /usr/share/agentscope/ui
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3

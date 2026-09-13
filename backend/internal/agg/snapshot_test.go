@@ -1,6 +1,9 @@
 package agg
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestUpdateTakesOnlyNewestPoint(t *testing.T) {
 	b := NewSnapshotBuilder()
@@ -70,3 +73,64 @@ func TestNilUpdateSafe(t *testing.T) {
 	}()
 	b.Update(&Snapshot{})
 }
+
+func TestAppendCappedAndCloneNil(t *testing.T) {
+	if s := cloneSnapshot(nil); s == nil {
+		t.Fatal("expected empty snapshot from cloneSnapshot(nil)")
+	}
+
+	var series []SeriesPoint
+	for i := 0; i < 70; i++ {
+		series = appendCapped(series, 60, SeriesPoint{T: int64(i), CPUPct: float64(i)})
+	}
+	if len(series) != 60 {
+		t.Fatalf("expected 60, got %d", len(series))
+	}
+
+	var ioSeries []IOPoint
+	for i := 0; i < 70; i++ {
+		ioSeries = appendIOCapped(ioSeries, 60, IOPoint{T: int64(i), RBPS: float64(i)})
+	}
+	if len(ioSeries) != 60 {
+		t.Fatalf("expected 60, got %d", len(ioSeries))
+	}
+
+	var netSeries []NetPoint
+	for i := 0; i < 70; i++ {
+		netSeries = appendNetCapped(netSeries, 60, NetPoint{T: int64(i), TxBPS: float64(i)})
+	}
+	if len(netSeries) != 60 {
+		t.Fatalf("expected 60, got %d", len(netSeries))
+	}
+}
+
+func TestRatesExtended(t *testing.T) {
+	c := NewCounter()
+	c.Add(10)
+	if c.Rate1s() != 0 {
+		// within 1s window rate is 0 before elapsed
+	}
+
+	// Test update when elapsed >= 1s multiple times
+	c.lastUpdate = time.Now().Add(-2 * time.Second)
+	c.Add(100)
+	_ = c.Rate5s()
+
+	// second update with existing rate5s
+	c.lastUpdate = time.Now().Add(-2 * time.Second)
+	c.Add(200)
+	r5 := c.Rate5s()
+	if r5 <= 0 {
+		t.Fatalf("expected r5 > 0, got %v", r5)
+	}
+
+	rm := NewRateMap()
+	rm.Add("test_key", 50)
+	if rm.Rate5s("missing") != 0 {
+		t.Fatal("expected 0 for missing key in Rate5s")
+	}
+	if rm.Rate1s("test_key") < 0 {
+		t.Fatal("negative rate")
+	}
+}
+

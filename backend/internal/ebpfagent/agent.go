@@ -127,6 +127,32 @@ func newLiveState() *liveState {
 	}
 }
 
+type ringbufRecordReader interface {
+	Read() (ringbuf.Record, error)
+	Close() error
+}
+
+type bpfMapPut interface {
+	Put(key, value interface{}) error
+}
+
+type bpfMapDelete interface {
+	Delete(key interface{}) error
+}
+
+type bpfMapPutDelete interface {
+	bpfMapPut
+	bpfMapDelete
+}
+
+type bpfMapLookup interface {
+	Lookup(key, valueOut interface{}) error
+}
+
+type bpfIterator interface {
+	Next(keyOut, valueOut interface{}) bool
+}
+
 // TryLoad attempts to load and attach the eBPF program.
 // Returns a cleanup func and nil error on success, or nil func + error on failure.
 func TryLoad(cfg *config.Config, snapshots chan<- *agg.Snapshot, events chan<- agg.EventRow) (func(), error) {
@@ -144,15 +170,86 @@ func TryLoad(cfg *config.Config, snapshots chan<- *agg.Snapshot, events chan<- a
 		return nil, fmt.Errorf("new BPF collection: %w", err)
 	}
 
-	if err := writeConfig(coll, cfg, nil); err != nil {
+	return initAndStart(coll, cfg, snapshots, events)
+}
+
+type tracepointLink interface {
+	Close() error
+}
+
+type tracepointLinker func(group, name string, prog *ebpf.Program, opts *link.TracepointOptions) (tracepointLink, error)
+type ringbufOpener func(m *ebpf.Map) (ringbufRecordReader, error)
+
+func defaultTracepointLinker(group, name string, prog *ebpf.Program, opts *link.TracepointOptions) (tracepointLink, error) {
+	return link.Tracepoint(group, name, prog, opts)
+}
+
+func defaultRingbufOpener(m *ebpf.Map) (ringbufRecordReader, error) {
+	if m == nil {
+		return nil, errors.New("events map missing")
+	}
+	return ringbuf.NewReader(m)
+}
+
+type configWriter func(coll *ebpf.Collection, cfg *config.Config, pids []int) error
+
+func initAndStart(coll *ebpf.Collection, cfg *config.Config, snapshots chan<- *agg.Snapshot, events chan<- agg.EventRow) (func(), error) {
+	return initAndStartWith(coll, cfg, writeConfig, attachTracepoints, defaultRingbufOpener, snapshots, events)
+}
+
+func initAndStartWith(coll *ebpf.Collection, cfg *config.Config, cfgWriter configWriter, attacher func(*ebpf.Collection) ([]tracepointLink, error), rbOpener ringbufOpener, snapshots chan<- *agg.Snapshot, events chan<- agg.EventRow) (func(), error) {
+	if coll == nil {
+		return nil, errors.New("nil collection")
+	}
+
+	if err := cfgWriter(coll, cfg, nil); err != nil {
 		coll.Close()
 		return nil, fmt.Errorf("init config map: %w", err)
 	}
 
-	var links []link.Link
+	links, err := attacher(coll)
+	if err != nil {
+		coll.Close()
+		return nil, err
+	}
+
+	cleanupAllLinks := func() {
+		for _, l := range links {
+			if l != nil {
+				l.Close()
+			}
+		}
+	}
+
+	eventsMap := coll.Maps["events"]
+	rb, err := rbOpener(eventsMap)
+	if err != nil {
+		cleanupAllLinks()
+		coll.Close()
+		return nil, fmt.Errorf("open ringbuf: %w", err)
+	}
+
+	log.Printf("eBPF agent loaded (%d tracepoints) target comm=%q pid=%d",
+		len(links), cfg.TargetComm(), cfg.TargetPID())
+
+	cleanup := startAgentWorkers(rb, coll, cfg, cleanupAllLinks, snapshots, events)
+	return cleanup, nil
+}
+
+func attachTracepoints(coll *ebpf.Collection) ([]tracepointLink, error) {
+	return attachTracepointsWith(coll, defaultTracepointLinker)
+}
+
+func attachTracepointsWith(coll *ebpf.Collection, linker tracepointLinker) ([]tracepointLink, error) {
+	if coll == nil {
+		return nil, errors.New("nil collection")
+	}
+	var links []tracepointLink
 	cleanupLinks := func() {
 		for _, l := range links {
-			l.Close()
+			if l != nil {
+				l.Close()
+			}
 		}
 	}
 
@@ -161,7 +258,7 @@ func TryLoad(cfg *config.Config, snapshots chan<- *agg.Snapshot, events chan<- a
 		if p == nil {
 			return fmt.Errorf("program %s not found in BPF object", prog)
 		}
-		l, err := link.Tracepoint(group, name, p, nil)
+		l, err := linker(group, name, p, nil)
 		if err != nil {
 			return fmt.Errorf("tracepoint %s/%s: %w", group, name, err)
 		}
@@ -171,35 +268,24 @@ func TryLoad(cfg *config.Config, snapshots chan<- *agg.Snapshot, events chan<- a
 
 	if err := attach("sched", "sched_process_exec", "tp_exec"); err != nil {
 		cleanupLinks()
-		coll.Close()
 		return nil, err
 	}
 	if err := attach("sched", "sched_process_exit", "tp_exit"); err != nil {
 		cleanupLinks()
-		coll.Close()
 		return nil, err
 	}
 	if err := attach("raw_syscalls", "sys_enter", "tp_sys_enter"); err != nil {
 		cleanupLinks()
-		coll.Close()
 		return nil, err
 	}
 	if err := attach("raw_syscalls", "sys_exit", "tp_sys_exit"); err != nil {
 		cleanupLinks()
-		coll.Close()
 		return nil, err
 	}
+	return links, nil
+}
 
-	rb, err := ringbuf.NewReader(coll.Maps["events"])
-	if err != nil {
-		cleanupLinks()
-		coll.Close()
-		return nil, fmt.Errorf("open ringbuf: %w", err)
-	}
-
-	log.Printf("eBPF agent loaded (%d tracepoints) target comm=%q pid=%d",
-		len(links), cfg.TargetComm(), cfg.TargetPID())
-
+func startAgentWorkers(rb ringbufRecordReader, coll *ebpf.Collection, cfg *config.Config, cleanupLinks func(), snapshots chan<- *agg.Snapshot, events chan<- agg.EventRow) func() {
 	done := make(chan struct{})
 	state := newLiveState()
 
@@ -222,16 +308,24 @@ func TryLoad(cfg *config.Config, snapshots chan<- *agg.Snapshot, events chan<- a
 		}
 	}()
 
-	cleanup := func() {
+	return func() {
 		close(done)
-		rb.Close()
-		cleanupLinks()
-		coll.Close()
+		if rb != nil {
+			_ = rb.Close()
+		}
+		if cleanupLinks != nil {
+			cleanupLinks()
+		}
+		if coll != nil {
+			coll.Close()
+		}
 	}
-	return cleanup, nil
 }
 
-func readRingbuf(rb *ringbuf.Reader, done <-chan struct{}, cfg *config.Config, state *liveState, events chan<- agg.EventRow) {
+func readRingbuf(rb ringbufRecordReader, done <-chan struct{}, cfg *config.Config, state *liveState, events chan<- agg.EventRow) {
+	if rb == nil {
+		return
+	}
 	for {
 		select {
 		case <-done:
@@ -360,56 +454,19 @@ func (s *liveState) buildSnapshot(cfg *config.Config, coll *ebpf.Collection) *ag
 
 	// BPF per-process counters → rates
 	var syscalls, errs, connects float64
-	if m := coll.Maps["process_stats"]; m != nil {
-		var key uint32
-		var val bpfProcStats
-		it := m.Iterate()
-		for it.Next(&key, &val) {
-			prev := s.statPrev[key]
-			syscalls += float64(val.SyscallCount-prev.SyscallCount) / elapsed
-			errs += float64(val.ErrCount-prev.ErrCount) / elapsed
-			connects += float64(val.ConnectCount-prev.ConnectCount) / elapsed
-			netTx += float64(val.NetTxBytes-prev.NetTxBytes) / elapsed
-			netRx += float64(val.NetRxBytes-prev.NetRxBytes) / elapsed
-			s.statPrev[key] = val
-		}
-	}
-
 	sysTop := make([]agg.SyscallStat, 0, 16)
-	if m := coll.Maps["syscall_counts"]; m != nil {
-		type pair struct {
-			nr uint32
-			n  uint64
+	if coll != nil {
+		if m := coll.Maps["process_stats"]; m != nil {
+			sc, ec, cc, tx, rx := s.readProcessStats(m.Iterate(), elapsed)
+			syscalls += sc
+			errs += ec
+			connects += cc
+			netTx += tx
+			netRx += rx
 		}
-		var rows []pair
-		var key uint32
-		var val uint64
-		it := m.Iterate()
-		for it.Next(&key, &val) {
-			delta := val - s.sysPrev[key]
-			s.sysPrev[key] = val
-			if delta == 0 {
-				continue
-			}
-			rows = append(rows, pair{nr: key, n: delta})
-		}
-		// simple selection of top 12
-		for i := 0; i < len(rows); i++ {
-			for j := i + 1; j < len(rows); j++ {
-				if rows[j].n > rows[i].n {
-					rows[i], rows[j] = rows[j], rows[i]
-				}
-			}
-		}
-		limit := 12
-		if len(rows) < limit {
-			limit = len(rows)
-		}
-		for i := 0; i < limit; i++ {
-			sysTop = append(sysTop, agg.SyscallStat{
-				Name:   enrich.GetSyscallName(rows[i].nr),
-				CountS: float64(rows[i].n) / elapsed,
-			})
+
+		if m := coll.Maps["syscall_counts"]; m != nil {
+			sysTop = s.readSyscallCounts(m.Iterate(), elapsed)
 		}
 	}
 
@@ -501,11 +558,76 @@ func (s *liveState) buildSnapshot(cfg *config.Config, coll *ebpf.Collection) *ag
 	}
 }
 
+func (s *liveState) readProcessStats(it bpfIterator, elapsed float64) (syscalls, errs, connects, netTx, netRx float64) {
+	if it == nil || elapsed <= 0 {
+		return
+	}
+	var key uint32
+	var val bpfProcStats
+	for it.Next(&key, &val) {
+		prev := s.statPrev[key]
+		syscalls += float64(val.SyscallCount-prev.SyscallCount) / elapsed
+		errs += float64(val.ErrCount-prev.ErrCount) / elapsed
+		connects += float64(val.ConnectCount-prev.ConnectCount) / elapsed
+		netTx += float64(val.NetTxBytes-prev.NetTxBytes) / elapsed
+		netRx += float64(val.NetRxBytes-prev.NetRxBytes) / elapsed
+		s.statPrev[key] = val
+	}
+	return
+}
+
+func (s *liveState) readSyscallCounts(it bpfIterator, elapsed float64) []agg.SyscallStat {
+	if it == nil || elapsed <= 0 {
+		return nil
+	}
+	type pair struct {
+		nr uint32
+		n  uint64
+	}
+	var rows []pair
+	var key uint32
+	var val uint64
+	for it.Next(&key, &val) {
+		delta := val - s.sysPrev[key]
+		s.sysPrev[key] = val
+		if delta == 0 {
+			continue
+		}
+		rows = append(rows, pair{nr: key, n: delta})
+	}
+	for i := 0; i < len(rows); i++ {
+		for j := i + 1; j < len(rows); j++ {
+			if rows[j].n > rows[i].n {
+				rows[i], rows[j] = rows[j], rows[i]
+			}
+		}
+	}
+	limit := 12
+	if len(rows) < limit {
+		limit = len(rows)
+	}
+	sysTop := make([]agg.SyscallStat, 0, limit)
+	for i := 0; i < limit; i++ {
+		sysTop = append(sysTop, agg.SyscallStat{
+			Name:   enrich.GetSyscallName(rows[i].nr),
+			CountS: float64(rows[i].n) / elapsed,
+		})
+	}
+	return sysTop
+}
+
 func writeConfig(coll *ebpf.Collection, cfg *config.Config, pids []int) error {
+	if coll == nil {
+		return nil
+	}
 	m := coll.Maps["config"]
 	if m == nil {
 		return errors.New("config map missing")
 	}
+	return writeConfigToMap(m, cfg, pids)
+}
+
+func writeConfigToMap(m bpfMapPut, cfg *config.Config, pids []int) error {
 	var val bpfConfig
 	val.SampleRate = 32
 	pid, comm := cfg.Target()
@@ -520,10 +642,17 @@ func writeConfig(coll *ebpf.Collection, cfg *config.Config, pids []int) error {
 }
 
 func syncTargets(coll *ebpf.Collection, pids []int) error {
+	if coll == nil {
+		return nil
+	}
 	m := coll.Maps["targets"]
 	if m == nil {
 		return nil
 	}
+	return syncTargetsToMap(m, m.Iterate(), pids)
+}
+
+func syncTargetsToMap(m bpfMapPutDelete, it bpfIterator, pids []int) error {
 	want := make(map[uint32]struct{}, len(pids))
 	one := uint8(1)
 	for _, pid := range pids {
@@ -534,10 +663,11 @@ func syncTargets(coll *ebpf.Collection, pids []int) error {
 	var key uint32
 	var val uint8
 	var stale []uint32
-	it := m.Iterate()
-	for it.Next(&key, &val) {
-		if _, ok := want[key]; !ok {
-			stale = append(stale, key)
+	if it != nil {
+		for it.Next(&key, &val) {
+			if _, ok := want[key]; !ok {
+				stale = append(stale, key)
+			}
 		}
 	}
 	for _, k := range stale {
@@ -547,10 +677,17 @@ func syncTargets(coll *ebpf.Collection, pids []int) error {
 }
 
 func readDropCount(coll *ebpf.Collection) uint64 {
+	if coll == nil {
+		return 0
+	}
 	m := coll.Maps["drop_count"]
 	if m == nil {
 		return 0
 	}
+	return readDropCountFromMap(m)
+}
+
+func readDropCountFromMap(m bpfMapLookup) uint64 {
 	var values []uint64
 	if err := m.Lookup(uint32(0), &values); err != nil {
 		var single uint64
@@ -569,6 +706,17 @@ func readDropCount(coll *ebpf.Collection) uint64 {
 func handleEvent(cfg *config.Config, ev bpfEvent, events chan<- agg.EventRow) {
 	comm := cstr(ev.Comm[:])
 	path := cstr(ev.Path[:])
+
+	if cfg != nil {
+		targetPid, targetComm := cfg.Target()
+		if targetPid > 0 && int(ev.Tgid) != targetPid {
+			return
+		}
+		if targetComm != "" && comm != targetComm {
+			return
+		}
+	}
+
 	now := time.Now()
 	nowStr := now.Format(time.RFC3339)
 

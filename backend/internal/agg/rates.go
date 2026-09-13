@@ -104,3 +104,15 @@ func (rm *RateMap) Rate1s(key string) float64 {
 	}
 	return c.Rate1s()
 }
+
+func (rm *RateMap) Rate5s(key string) float64 {
+	rm.mu.RLock()
+	c, ok := rm.counters[key]
+	rm.mu.RUnlock()
+
+	if !ok {
+		return 0
+	}
+	return c.Rate5s()
+}
+

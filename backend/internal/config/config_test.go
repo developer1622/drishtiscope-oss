@@ -1,7 +1,9 @@
 package config
 
 import (
+	"os"
 	"testing"
+	"time"
 )
 
 func TestSanitizeComm(t *testing.T) {
@@ -85,6 +87,73 @@ func TestValidateMode(t *testing.T) {
 	if err := c.Validate(); err != nil {
 		t.Fatal(err)
 	}
+
+	c.HttpAddr = ""
+	if err := c.Validate(); err == nil {
+		t.Fatal("expected empty HttpAddr error")
+	}
+	c.HttpAddr = ":8080"
+
+	c.SnapshotMs = 10
+	if err := c.Validate(); err == nil {
+		t.Fatal("expected snapshot-ms out of range error")
+	}
+	c.SnapshotMs = 400
+}
+
+func TestNormalizeEdgeCases(t *testing.T) {
+	c := &Config{
+		SnapshotMs:      10, // < 50
+		MaxBodyBytes:    -1,
+		MaxWSClients:    -1,
+		MaxHistory:      -1,
+		ShutdownTimeout: -1,
+		RateLimitRPS:    -1,
+		RateLimitBurst:  -1,
+		targetPid:       -1,
+		targetComm:      "bad/comm",
+	}
+	c.normalize()
+
+	if c.SnapshotMs != DefaultSnapshotMs {
+		t.Errorf("expected default snapshot ms, got %d", c.SnapshotMs)
+	}
+	if c.MaxBodyBytes != DefaultMaxBody {
+		t.Errorf("expected default body bytes, got %d", c.MaxBodyBytes)
+	}
+	if c.MaxWSClients != DefaultMaxWS {
+		t.Errorf("expected default ws clients, got %d", c.MaxWSClients)
+	}
+	if c.MaxHistory != DefaultMaxHistory {
+		t.Errorf("expected default max history, got %d", c.MaxHistory)
+	}
+	if c.ShutdownTimeout != DefaultShutdownSec*time.Second {
+		t.Errorf("expected default shutdown timeout, got %v", c.ShutdownTimeout)
+	}
+	if c.RateLimitRPS != 40 {
+		t.Errorf("expected rate limit 40, got %v", c.RateLimitRPS)
+	}
+	if c.RateLimitBurst != 80 {
+		t.Errorf("expected burst 80, got %d", c.RateLimitBurst)
+	}
+	if c.targetPid != 0 {
+		t.Errorf("expected target pid 0, got %d", c.targetPid)
+	}
+
+	// Test upper boundaries
+	c.SnapshotMs = 20_000
+	c.MaxHistory = 10_000
+	c.targetPid = MaxPID + 100
+	c.normalize()
+	if c.SnapshotMs != 10_000 {
+		t.Errorf("expected capped 10_000, got %d", c.SnapshotMs)
+	}
+	if c.MaxHistory != DefaultMaxHistory {
+		t.Errorf("expected default history, got %d", c.MaxHistory)
+	}
+	if c.targetPid != 0 {
+		t.Errorf("expected reset pid, got %d", c.targetPid)
+	}
 }
 
 func TestOriginAllowed(t *testing.T) {
@@ -126,6 +195,10 @@ func TestBindsAllInterfaces(t *testing.T) {
 	if c.BindsAllInterfaces() {
 		t.Fatal("loopback")
 	}
+	c.HttpAddr = "0.0.0.0:8080"
+	if !c.BindsAllInterfaces() {
+		t.Fatal("0.0.0.0:8080 should bind all interfaces")
+	}
 }
 
 func TestWSOriginPatterns(t *testing.T) {
@@ -135,4 +208,49 @@ func TestWSOriginPatterns(t *testing.T) {
 	if len(p) == 0 {
 		t.Fatal("empty patterns")
 	}
+}
+
+func TestEnvHelpers(t *testing.T) {
+	os.Setenv("TEST_STRING_VAR", "hello")
+	defer os.Unsetenv("TEST_STRING_VAR")
+	if envOr("TEST_STRING_VAR", "def") != "hello" {
+		t.Fatal("envOr failed")
+	}
+	if envOr("NON_EXISTENT_VAR_XYZ", "def") != "def" {
+		t.Fatal("envOr fallback failed")
+	}
+
+	os.Setenv("TEST_INT_VAR", "42")
+	defer os.Unsetenv("TEST_INT_VAR")
+	if envInt("TEST_INT_VAR", 0) != 42 {
+		t.Fatal("envInt failed")
+	}
+	os.Setenv("TEST_BAD_INT_VAR", "not-a-number")
+	defer os.Unsetenv("TEST_BAD_INT_VAR")
+	if envInt("TEST_BAD_INT_VAR", 99) != 99 {
+		t.Fatal("envInt fallback failed")
+	}
+
+	os.Setenv("TEST_BOOL_VAR", "true")
+	defer os.Unsetenv("TEST_BOOL_VAR")
+	if !envBool("TEST_BOOL_VAR", false) {
+		t.Fatal("envBool true failed")
+	}
+	os.Setenv("TEST_BOOL_1", "1")
+	defer os.Unsetenv("TEST_BOOL_1")
+	if !envBool("TEST_BOOL_1", false) {
+		t.Fatal("envBool 1 failed")
+	}
+	if envBool("NON_EXISTENT_BOOL", true) != true {
+		t.Fatal("envBool fallback failed")
+	}
+
+	origins := parseOrigins(" http://a.com, http://b.com , ")
+	if len(origins) != 2 || origins[0] != "http://a.com" || origins[1] != "http://b.com" {
+		t.Fatalf("parseOrigins failed: %v", origins)
+	}
+
+	// ParseFlags test
+	c := Load()
+	c.ParseFlags()
 }
