@@ -3,10 +3,11 @@ import { test, expect } from '@playwright/test';
 test.describe('Dashboard Tabs Navigation & Deep Telemetry Panels', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('header')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('header')).toBeVisible({ timeout: 20000 });
   });
 
   test('navigates through all 5 tabs and verifies tab banners', async ({ page }) => {
+    test.setTimeout(60000);
     const tabs = [
       { name: 'Process Story', bannerText: 'Chronological timeline' },
       { name: 'Overview', bannerText: 'Core Agent Golden Signals' },

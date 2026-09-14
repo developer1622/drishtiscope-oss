@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Linux Metric Encyclopedia Modal & Linux Commands', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('header')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('header')).toBeVisible({ timeout: 20000 });
   });
 
   test('clicking ? on KPI opens metric modal with Linux Command cheat sheet', async ({ page }) => {

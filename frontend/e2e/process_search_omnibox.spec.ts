@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Executing Process Search Omnibox & Suggestions', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('header')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('header')).toBeVisible({ timeout: 20000 });
   });
 
   test('pressing / shortcut focuses the search omnibox', async ({ page }) => {

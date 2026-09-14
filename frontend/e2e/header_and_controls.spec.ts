@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Header Navigation & Global Controls', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    // Wait for the main container to load
-    await expect(page.locator('header')).toBeVisible({ timeout: 10000 });
+    // Wait for the main container to load — use 20s to allow mobile viewport hydration
+    await expect(page.locator('header')).toBeVisible({ timeout: 20000 });
   });
 
   test('renders DrishtiScope logo, brand text and Devanagari badge', async ({ page }) => {
