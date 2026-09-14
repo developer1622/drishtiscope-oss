@@ -143,7 +143,7 @@ The **Dynamic Graph Scratchpad** (located at the bottom of the dashboard) allows
 **Yes, the Copilot works 100% locally out of the box without any API key.**
 
 - **Local Deterministic Diagnostic Engine**: When no API key is configured, the Copilot executes a rule-based Linux diagnostic engine that evaluates the live snapshot (CPU saturation, open FD count, P99 syscall latency, error rates) and provides actionable CLI triage steps (`iotop`, `ss -tpe`, `pidstat`).
-- **Cloud LLM Integration (Optional)**: If you provide an optional API key (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, or `OPENAI_API_KEY`), the Copilot injects the exact, current host snapshot (KPIs, active files, open sockets, top syscalls) as structured context, enabling deep natural-language root-cause analysis (RCA).
+- **Cloud LLM Integration (Optional)**: If you provide an optional API key (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GROQ_API_KEY`), the Copilot injects the exact, current host snapshot (KPIs, active files, open sockets, top syscalls) as structured context, enabling deep natural-language root-cause analysis (RCA). All credentials are read strictly from server environment variables at runtime—zero API keys are hardcoded, cached, or exposed to the client.
 
 ---
 
@@ -160,8 +160,8 @@ Yes. DrishtiScope provides enterprise-ready endpoints:
 ### 13. Does DrishtiScope run on Windows Subsystem for Linux (WSL2), native Windows, or macOS?
 
 **Yes. DrishtiScope is cross-platform with platform-native adaptations:**
-- **Linux & WSL2**: Full primary support. In WSL2, DrishtiScope runs in Real Mode (`mode=real`), parsing `/proc` and host network stacks smoothly.
-- **Native Windows**: Compiles natively with Go. Incorporates experimental bindings for [Microsoft eBPF for Windows](docs/WINDOWS_EBPF.md) (`ebpf-for-windows`).
+- **Linux & WSL2**: Full primary support. In WSL2, DrishtiScope runs in Real Mode (`mode=real`), parsing `/proc` and host network stacks smoothly. In Linux with kernel headers and root privileges, it attaches directly to eBPF tracepoints (`mode=ebpf`).
+- **Native Windows**: Compiles natively with Go (`drishtiscope.exe`). Seamlessly discovers real Windows processes using native Windows process scanning (`tasklist.exe` / Win32 process APIs) and interfaces with [Microsoft eBPF for Windows](WINDOWS_EBPF.md) (`ebpfcore.sys`). Serves both the WebSocket telemetry and the bundled React console on `http://localhost:8080`.
 - **macOS (Darwin)**: Compiles natively with Go and provides developer demonstration telemetry and synthetic sampling for local UI testing.
 
 ---
@@ -180,4 +180,4 @@ We welcome community contributions!
 - **Add a Kernel Tracepoint**: Modify [`backend/bpf/agent.bpf.c`](file:///home/ramum/agentscope/backend/bpf/agent.bpf.c), declare the BPF program with `SEC("tracepoint/...")`, and update [`backend/internal/ebpfagent/agent.go`](file:///home/ramum/agentscope/backend/internal/ebpfagent/agent.go).
 - **Add a Metric to the Encyclopedia**: Add a new entry to [`frontend/src/data/metricDocs.ts`](file:///home/ramum/agentscope/frontend/src/data/metricDocs.ts) with plain-English definitions, healthy/warning thresholds, and CLI verification commands.
 - **Add a Visual Chart Preset**: Define the new graph in [`frontend/src/store/useScopeStore.ts`](file:///home/ramum/agentscope/frontend/src/store/useScopeStore.ts) and add the preset button in [`frontend/src/components/GraphScratchpad.tsx`](file:///home/ramum/agentscope/frontend/src/components/GraphScratchpad.tsx).
-- **Run Tests**: Ensure `go test -v ./...` passes in `backend/` and `npm run build` succeeds in `frontend/`. Refer to [`CONTRIBUTING.md`](file:///home/ramum/agentscope/CONTRIBUTING.md) for full guidelines.
+- **Run Tests**: Ensure `go test -v ./...` passes in `backend/`, `npm run build` succeeds in `frontend/`, and all Playwright end-to-end tests pass (`npm run test:e2e`). Refer to [`CONTRIBUTING.md`](file:///home/ramum/agentscope/CONTRIBUTING.md) for full guidelines.

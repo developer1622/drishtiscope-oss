@@ -816,5 +816,31 @@ export const METRIC_DOCS: Record<string, MetricDoc> = {
     linuxAdminCommand: 'sar -u 1 60 (sample CPU every second for 1 minute) or sar -r 5 12 (memory over 1 hour)',
     kernelDataSource: 'Ring buffers in agg/snapshot.go and SQLite TSDB rolling time ranges',
   },
+
+  telemetry_modes: {
+    id: 'telemetry_modes',
+    title: 'DrishtiScope Telemetry Ingestion Modes',
+    category: 'Kernel & eBPF',
+    themeColor: 'cyan',
+    shortDefinition: 'Explains the operational telemetry modes supported by DrishtiScope: REAL LIVE, EBPF LIVE, and MOCK.',
+    juniorAdminExplanation:
+      'DrishtiScope can observe Linux processes and LLM agents in three distinct telemetry modes:\n\n' +
+      '• REAL LIVE (Host /proc & sysfs mode - Default):\n' +
+      'Collects 100% genuine Linux kernel telemetry directly from /proc/[pid]/stat, /proc/[pid]/io, /proc/[pid]/fd, and socket inodes. Operates completely without root privileges, kernel headers, or compiler toolchains. Perfect for developer laptops, unprivileged containers, and production agent hosts.\n\n' +
+      '• EBPF LIVE (Kernel Tracepoint mode):\n' +
+      'Attaches compiled CO-RE eBPF tracepoints (agent.bpf.o) directly to Linux kernel hooks (raw_syscalls, openat, connect, sched_process_exec) using BPF ring buffers for nanosecond-precision tracing. Requires root or CAP_BPF / CAP_PERFMON privileges.\n\n' +
+      '• MOCK (Synthetic Simulation mode):\n' +
+      'Simulates active LLM agent processes with realistic CPU oscillation sine jitter, tool forks, socket connects, and security permission violations for offline testing and CI workflows.',
+    howToRead: {
+      unit: 'Operational Ingestion Mode',
+      healthy: 'REAL LIVE or EBPF LIVE: Active observation of real operating system processes.',
+      warning: 'MOCK: Synthetic data stream active for demonstration purposes.',
+      critical: 'OFFLINE: Backend process stopped or unreachable.',
+    },
+    whyAiAgentsCare:
+      'Ensures continuous visibility into autonomous agent processes across any environment—from local developer laptops with zero privileges to production Kubernetes clusters with full kernel tracing.',
+    linuxAdminCommand: './drishtiscope -mode=real -comm=agy (or sudo ./drishtiscope -mode=ebpf)',
+    kernelDataSource: 'Linux /proc pseudo-filesystem + BPF ringbuffer (bpf_perf_event_output)',
+  },
 };
 

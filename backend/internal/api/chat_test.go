@@ -19,7 +19,7 @@ import (
 func TestGeminiDirect(t *testing.T) {
 	key := os.Getenv("GEMINI_API_KEY")
 	if key == "" {
-		key = ""
+		t.Skip("GEMINI_API_KEY not set; skipping live cloud test")
 	}
 
 	msgs := []chatMsg{

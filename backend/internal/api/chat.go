@@ -84,11 +84,7 @@ You speak with authority but remain approachable. Never say "as an AI" or "I don
 
 	if req.Model != "rule-engine" && req.Model != "offline" {
 		// Gemini is tried first (highest priority)
-		geminiKey := os.Getenv("GEMINI_API_KEY")
-		if geminiKey == "" {
-			geminiKey = ""
-		}
-		if geminiKey != "" {
+		if geminiKey := os.Getenv("GEMINI_API_KEY"); geminiKey != "" {
 			reply, model, err = callGemini(r.Context(), geminiKey, allMessages, req.Model)
 			if err == nil {
 				source = "llm"

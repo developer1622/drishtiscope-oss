@@ -108,14 +108,20 @@ Attempts eBPF probe attachment first. If the kernel denies unprivileged BPF load
 cd backend
 go test -v -cover ./...
 
-# Build the native binary
+# Build Linux binary
 go build -ldflags="-s -w" -o drishtiscope ./cmd/agentscope
 
-# Run in Real Mode targeting an autonomous agent
+# Build Windows binary (.exe)
+GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o drishtiscope.exe ./cmd/agentscope
+
+# Run on Linux/WSL in Real Mode targeting an autonomous agent
 ./drishtiscope -mode=real -comm=agy
 
-# Run with eBPF privileges
+# Run on Linux with eBPF privileges
 sudo ./drishtiscope -mode=ebpf -comm=codex
+
+# Run natively on Windows (PowerShell)
+.\drishtiscope.exe -mode=real -comm=agy
 
 # Serve prebuilt frontend dist directly
 ./drishtiscope -mode=real -static=../frontend/dist
@@ -123,7 +129,8 @@ sudo ./drishtiscope -mode=ebpf -comm=codex
 
 ---
 
-## 🔒 Security & Loopback Defaults
+## 🔒 Security, Secrets & Loopback Defaults
 
 - **OWASP Compliance**: By default, DrishtiScope listens only on local interfaces (`127.0.0.1:8080`). Remote interfaces require passing `AUTH_TOKEN` in the environment to enforce HTTP Bearer authentication and WebSocket token validation.
+- **Zero Hardcoded Secrets**: All external LLM credentials (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`) are read strictly from host environment variables at runtime. No keys or tokens are stored, cached, or bundled into binaries.
 - **Payload Privacy**: Zero payload interception. No prompt text, tokens, or model response strings are stored or transmitted.

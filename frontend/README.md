@@ -100,11 +100,21 @@ Located at the bottom of the dashboard, the **Graph Scratchpad** lets engineers 
 
 ---
 
+## 🔍 Live Executing Process Omnibox (`/`)
+
+The header incorporates a high-efficiency process search omnibox designed for live debugging:
+- **Global Keyboard Shortcut (`/`)**: Press `/` anywhere to focus the omnibox instantly.
+- **Dynamic Suggestions**: Automatically detects and lists executing processes ranked by CPU% and memory.
+- **Keyboard Navigation**: Use `ArrowDown` / `ArrowUp` to cycle through candidates, `Enter` to select, and `Escape` to dismiss.
+- **Direct Filtering**: Search by process name (`agy`, `python`, `node`) or exact PID (`143399`).
+
+---
+
 ## 🤖 AI Observability Copilot Chat Drawer
 
 Clicking the floating bot icon in the bottom-right corner slides open the **Agent Copilot**:
 - **Local Rule Engine**: Evaluates live snapshot metrics and diagnoses performance bottlenecks with zero API keys.
-- **Natural Language Analysis**: With an optional API key configured (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`), the Copilot analyzes memory growth, file descriptor leaks, or network stalls in context.
+- **Natural Language Analysis**: With an optional API key configured (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`), the Copilot analyzes memory growth, file descriptor leaks, or network stalls in context. Keys are strictly read from server environment variables and never bundled or sent to the browser.
 
 ---
 
@@ -125,6 +135,9 @@ npx tsc --noEmit
 # Build production bundle
 npm run build
 
-# Run Playwright E2E and visual regression suite (from repository root)
+# Run Playwright E2E Test Suite (40 tests across desktop & mobile)
+npm run test:e2e
+
+# Run Visual Regression Audit
 NODE_PATH=frontend/node_modules node tests/ui_audit.cjs
 ```

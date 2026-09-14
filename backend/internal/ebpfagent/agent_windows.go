@@ -4,6 +4,7 @@ package ebpfagent
 
 import (
 	"context"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -56,7 +57,8 @@ func CheckWindowsEbpfSubsystem() WindowsEbpfSubsystemStatus {
 // TryLoad provides Windows eBPF integration conforming to https://github.com/microsoft/ebpf-for-windows.
 // When native ebpfcore.sys drivers are present, it bridges kernel probes; otherwise it activates the Windows Host Kernel Telemetry Bridge in eBPF mode.
 func TryLoad(cfg *config.Config, snapshots chan<- *agg.Snapshot, events chan<- agg.EventRow) (func(), error) {
-	_ = CheckWindowsEbpfSubsystem()
+	status := CheckWindowsEbpfSubsystem()
+	log.Printf("[windows-ebpf] %s", status.Detail)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	engine := realengine.NewEngine(cfg)

@@ -75,6 +75,101 @@ For the complete competitive analysis and positioning matrix against 40+ industr
 
 ---
 
+## 📸 Visual Tour & Core Modules
+
+DrishtiScope provides a high-density, intuitive SRE control room for autonomous AI coding agents and LLM runtimes. Below is an overview of each core module, how it works, and how to use the console:
+
+### 1. Tab 1: Process Story (`Activity`) — Turn-by-Turn Agent Activity Chronology
+![Tab 1: Process Story](screenshots/tab_story_desktop.png)
+
+- **What it provides**: Chronological event feed capturing every tool execution, child process fork (`bash`, `git`, `python`, `npm`), file modification, and socket connect.
+- **AI Executive Verdict**: Synthesizes microsecond kernel metrics into human-readable agent states (*Active Code Generation*, *Intense File I/O & Socket Activity*, *Waiting on LLM Token Stream*, or *Idle Event Loop*).
+- **One-Click Linux Triage**: Instantly copy diagnostic commands pre-configured with the agent's PID (`strace -p <PID>`, `pidstat -p <PID> 1`, `lsof -p <PID>`).
+- **How to use**: Click the **Process Story** tab or press `1` to follow what the agent is doing second-by-second.
+
+### 2. Tab 2: Overview (`Vitals`) — Core SRE Golden Signals & Reliability
+![Tab 2: Overview Vitals](screenshots/tab_basic_desktop.png)
+
+- **What it provides**: Continuous tracking of the 4 SRE Golden Signals:
+  - **Latency**: Microsecond-precision syscall latency quantiles (P50 Median, P90, and P99 Tail Latency).
+  - **Traffic**: Live system call throughput (Syscalls/sec) and bidirectional network rate (Kbps / Mbps).
+  - **Errors**: Non-zero negative kernel return rates (`EACCES`, `EPERM`, `ECONNREFUSED`).
+  - **Saturation**: CPU utilization percentage, open file descriptors (FDs / limit), and CFS scheduler runqueue wait time.
+- **Monarch Synchronized Waveform**: Real-time 60-second correlation comparing Syscall RPS against P99 latency spikes.
+- **SLO Error Budget & Burn Rate**: Tracks 99.9% SLO compliance and 30-day burn rate acceleration to catch runaway agent loops before resource exhaustion.
+- **How to use**: Click the **Overview** tab or press `2` for an instant high-level health assessment.
+
+### 3. Tab 3: Execution & CPU (`Call Trees`) — Continuous Flamegraph & Process Tree
+![Tab 3: Execution & CPU](screenshots/tab_medium_desktop.png)
+
+- **What it provides**: Continuous on-CPU stack trace profiling and execution call tree breakdown across runtime engines (Python, Node.js, Go, Rust, C++).
+- **Single-Click Perfetto Export**: Export Chrome/Perfetto Trace Event JSON to inspect nanosecond timeline slices directly in [ui.perfetto.dev](https://ui.perfetto.dev).
+- **Live Process Hierarchy**: Displays active child processes, execution states (`R` Running, `S` Sleeping, `D` Disk Sleep, `Z` Zombie), thread counts, and memory footprints.
+- **How to use**: Click the **Execution & CPU** tab or press `3` to isolate CPU hot spots and inspect process trees.
+
+### 4. Tab 4: System Metrics (`Telemetry`) — MQL Console & Deep Telemetry
+![Tab 4: System Metrics](screenshots/tab_advanced_desktop.png)
+
+- **What it provides**: Metrics Query Language (MQL) interactive console for ad-hoc querying and slicing of live metrics.
+- **Subsystem Breakdown Donut Charts**: Immediate visual breakdown of resource consumption across CPU cores, Resident Memory (RSS), Disk I/O, and Network.
+- **Physical Disk IOPS & Latency**: Real-time storage read/write rates and physical IOPS curves.
+- **How to use**: Click the **System Metrics** tab or press `4` to run telemetry queries and inspect low-level hardware counters.
+
+### 5. Tab 5: Security & Logs (`Audit`) — Workload Profile Radar & Sandbox Audit
+![Tab 5: Security & Logs](screenshots/tab_complete_desktop.png)
+
+- **What it provides**: 6-axis AI Workload Profile Radar evaluating CPU, Memory, Disk, Network, Concurrency, and Syscall intensity.
+- **Permission Denial & Security Alerts**: Immediate capture of permission denials (`EACCES`, `EPERM`) and blocked network operations.
+- **Structured Runtime Logs**: Multi-severity log explorer (`INFO`, `WARN`, `CRITICAL`) with search filtering and one-click JSON export.
+- **How to use**: Click the **Security & Logs** tab or press `5` to audit agent behavior and inspect security boundaries.
+
+### 6. Linux Metric Encyclopedia Modal & Terminal Command Cheat Sheet
+![Linux Metric Encyclopedia](screenshots/modal_metric_help.png)
+
+- **What it provides**: Every KPI tile, chart header, and telemetry mode chip across the dashboard features an interactive `(?)` glyph. Clicking it opens the **Metric Help Modal**:
+  - **Intuitive Analogies**: Plain-English explanations (e.g. comparing CFS runqueue latency to retail checkout lines).
+  - **Threshold Guidance**: Explicit bands for Normal/Healthy, Warning, and Critical/Danger states.
+  - **Why AI Agents Care**: Concrete impact on LLM token generation, memory footprint, or tool execution stalls.
+  - **Copyable Terminal Verification**: Direct copy of Linux commands (`pidstat`, `sar`, `ss`, `lsof`) to verify numbers on your terminal.
+  - **Kernel Source Location**: Exact Linux kernel source files where telemetry originates (e.g. `kernel/sched/core.c`, `/proc/[pid]/io`).
+
+### 7. AI Observability Copilot Chat Drawer
+![AI Copilot Chat Drawer](screenshots/chat_drawer_open.png)
+
+- **What it provides**: Floating AI observability assistant available from any tab by clicking the bottom-right Copilot button.
+- **100% Local Rule Engine**: Evaluates live snapshot metrics and diagnoses performance bottlenecks with zero external API keys.
+- **Dynamic Chart Generation**: Ask the Copilot to graph correlations (e.g. *"Graph thread count vs memory growth"*), and it mounts the chart directly into your **Dynamic Graph Scratchpad**.
+
+---
+
+## 🌍 Universal Compatibility: Multi-Mode, Multi-Platform & Multi-Arch
+
+DrishtiScope is engineered from the ground up to run anywhere developers, SREs, and AI engineers work:
+
+### 1. Three Ingestion Modes
+- **EBPF LIVE (`mode=ebpf`)**: Nanosecond-precision Linux kernel tracepoints (`raw_syscalls:sys_enter`, `sys_exit`, `sched_process_exec`, `sched_process_exit`) via 16MB in-kernel BPF ring buffers. On Windows, integrates with [Microsoft eBPF for Windows](docs/WINDOWS_EBPF.md) (`ebpfcore.sys`).
+- **REAL LIVE (`mode=real`)**: Zero-root telemetry collector. On Linux/WSL2, reads genuine `/proc/[pid]/*` and `sysfs` telemetry. On native Windows, scans live processes via Windows system APIs (`tasklist.exe` & ETW bridge). Operates with zero privileges on locked-down enterprise workstations and developer laptops.
+- **MOCK (`mode=mock`)**: Deterministic synthetic simulation with realistic sinusoidal CPU oscillation, tool bursts, and socket events for offline testing, UI design, and CI workflows.
+- **AUTO (`mode=auto`, default)**: Automatically probes host permissions; attaches eBPF if privileged, otherwise falls back gracefully to Real Mode with zero synthetic data.
+
+### 2. Multi-Platform Support
+- **Linux (x86_64 & aarch64)**: Full native kernel 5.8+ support with BTF/CO-RE and zero-root `/proc` engine.
+- **Windows Subsystem for Linux (WSL2)**: 100% feature parity in both Real and eBPF modes.
+- **Native Windows 10/11 & Windows Server**: Native `drishtiscope.exe` single-binary execution with Windows process discovery and Microsoft eBPF for Windows integration.
+- **macOS (Darwin amd64 & Apple Silicon arm64)**: Native compilation with synthetic demonstration engine for local UI development.
+
+### 3. Multi-Architecture Standalone Binaries
+- **Pure Go Userspace + Embedded SQLite TSDB (`modernc.org/sqlite`)**: Zero CGO dependencies.
+- Packaged as standalone ~18 MB single binaries across 6 architectures:
+  - `linux/amd64`
+  - `linux/arm64`
+  - `windows/amd64` (`drishtiscope.exe`)
+  - `windows/arm64` (`drishtiscope.exe`)
+  - `darwin/amd64`
+  - `darwin/arm64` (Apple Silicon)
+
+---
+
 ## 🌟 Key Features
 
 ### 1. Dual-Engine Architecture: eBPF + Zero-Root Real Mode
@@ -97,21 +192,27 @@ Switch between 5 themes instantly from the top header:
 - **📟 Unix Mode**: Retro green-screen terminal aesthetic (`#0a0f0d` background, `#00ff66` phosphor accents).
 - **🔮 Purple Mode**: Cyber synthwave neon aesthetic (`#0d0b18` background, `#a855f7` violet accents).
 
-### 4. Anti-Flicker & Stream Rate Controls
+### 4. Live Executing Process Omnibox (`/`)
+- **Instant Keyboard Navigation**: Press `/` anywhere in the dashboard to instantly focus the search omnibox.
+- **Real-Time Suggestions**: Automatically ranks and surfaces executing processes by CPU and RSS memory.
+- **Full Keyboard Navigation**: Cycle candidates with `ArrowDown` / `ArrowUp`, select with `Enter`, or dismiss with `Escape`.
+- **Direct PID / Comm Targeting**: Target any process on the fly without restarting the daemon.
+
+### 5. Anti-Flicker & Stream Rate Controls
 High-frequency streams can strain an engineer's eyes. DrishtiScope provides:
 - **Stream Rate Throttling**: Choose between `500ms` (Rapid), `1s` (Balanced), `2s` (Calm default), `5s` (Relaxed), or `Manual`.
 - **Anti-Flicker Toggle**: Dampens rapid numerical jitter and suppresses abrupt pulse animations.
 - **Live / Paused Freeze**: Pause the stream at any millisecond to inspect and copy state.
 
-### 5. Metric Encyclopedia with Explanatory Glyphs `(?)`
-Every KPI tile and chart header features an interactive `(?)` glyph. Clicking it opens the **Metric Help Modal** with:
+### 6. Metric Encyclopedia with Explanatory Glyphs `(?)`
+Every KPI tile, chart header, and telemetry mode chip features an interactive `(?)` glyph. Clicking it opens the **Metric Help Modal** with:
 - Plain English analogies (e.g., comparing runqueue latency to a grocery store checkout).
 - Healthy, warning, and critical thresholds.
 - Impact on AI agent token generation and tool execution.
 - Copyable terminal verification commands (`pidstat`, `strace`, `ss`, `lsof`).
 - Exact Linux kernel source code locations (e.g. `kernel/sched/core.c`, `/proc/[pid]/io`).
 
-### 6. Dynamic Graph Scratchpad & Linux Playground
+### 7. Dynamic Graph Scratchpad & Linux Playground
 Mount specialized graphs on demand:
 - *Syscall Latency Quantile Curve (P50 vs P90 vs P99)*
 - *Context Switches vs Runqueue Latency*
@@ -120,11 +221,12 @@ Mount specialized graphs on demand:
 - *Page Fault Dynamics (Minor vs Major Faults)*
 - Custom graphs can also be created dynamically via the AI Copilot.
 
-### 7. AI Observability Copilot Chat Drawer
-- **100% Local Rule Engine**: Operates with zero API keys, diagnosing bottlenecks from live snapshots.
-- **Natural Language Analysis**: With an optional API key configured (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`), the Copilot analyzes memory growth, socket stalls, or file descriptor leaks in context.
+### 8. AI Observability Copilot Chat Drawer
+- **100% Local Rule Engine**: Operates with zero external API keys, diagnosing bottlenecks from live snapshots locally.
+- **Natural Language Analysis**: With an optional API key configured strictly via environment variables (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`), the Copilot analyzes memory growth, socket stalls, or file descriptor leaks in context. No keys are ever bundled or exposed.
 
-### 8. Enterprise Exporters
+### 9. Comprehensive Testing & Enterprise Exporters
+- **Playwright E2E Suite**: 40 responsive tests covering Desktop Chrome and Mobile Chrome (`npm run test:e2e`).
 - **Prometheus (`/metrics`)**: OpenMetrics standard gauges and counters.
 - **Perfetto Traces (`/api/v1/traces/perfetto`)**: Direct import into [ui.perfetto.dev](https://ui.perfetto.dev).
 - **Structured Logs (`/api/v1/logs`)**: Ingestible by Loki, Elasticsearch, or Cloud Logging.
@@ -247,6 +349,24 @@ cd ..
 
 # 4. Launch DrishtiScope
 ./drishtiscope -mode=real -comm=agy -static=frontend/dist
+```
+
+### Option 4: Run Natively on Windows
+
+DrishtiScope runs natively on Windows 10/11 using pure Go, native Windows process scanning (`tasklist.exe`), and interfaces with [Microsoft eBPF for Windows](docs/WINDOWS_EBPF.md):
+
+```powershell
+# In PowerShell:
+# 1. Build or download Windows binary
+cd backend
+go build -ldflags="-s -w" -o ../drishtiscope.exe ./cmd/agentscope
+cd ..
+
+# 2. Run DrishtiScope targeting your agent process (e.g. agy.exe, python.exe, powershell.exe)
+.\drishtiscope.exe -mode=real -comm=agy
+
+# 3. Open dashboard in your browser
+Start-Process http://localhost:8080
 ```
 
 ---

@@ -189,7 +189,65 @@ export function Header({
   const query = searchQuery.trim().toLowerCase();
   const currentTargetClean = (targetLabel || '').toLowerCase();
 
-  const filteredProcesses = processes
+  // If no processes currently tracked, provide fallback agent suggestions so user can easily click-to-target
+  const displayProcesses: ProcessRow[] =
+    processes.length > 0
+      ? processes
+      : [
+          {
+            pid: 143399,
+            tgid: 143399,
+            ppid: 1,
+            comm: 'agy',
+            cmdline: 'agy --conversation=active',
+            exe: '/usr/local/bin/agy',
+            uid: 1000,
+            cpu_pct: 1.2,
+            rss_bytes: 604471296,
+            vms_bytes: 2417885184,
+            state: 'S',
+            threads: 17,
+            open_fds: 72,
+            ctx_switches: 12400,
+            start_time: '12:00:00',
+          },
+          {
+            pid: 1042,
+            tgid: 1042,
+            ppid: 1,
+            comm: 'python3',
+            cmdline: 'python3 -m agentscope.runtime',
+            exe: '/usr/bin/python3',
+            uid: 1000,
+            cpu_pct: 0.8,
+            rss_bytes: 314572800,
+            vms_bytes: 1258291200,
+            state: 'S',
+            threads: 8,
+            open_fds: 45,
+            ctx_switches: 8420,
+            start_time: '12:05:00',
+          },
+          {
+            pid: 2190,
+            tgid: 2190,
+            ppid: 1,
+            comm: 'node',
+            cmdline: 'node server.js',
+            exe: '/usr/local/bin/node',
+            uid: 1000,
+            cpu_pct: 0.5,
+            rss_bytes: 157286400,
+            vms_bytes: 629145600,
+            state: 'S',
+            threads: 11,
+            open_fds: 28,
+            ctx_switches: 5120,
+            start_time: '12:10:00',
+          },
+        ];
+
+  const filteredProcesses = displayProcesses
     .filter((p) => {
       if (!query) return true;
       const label = agentLabel(p.comm, p.cmdline).toLowerCase();
@@ -262,26 +320,19 @@ export function Header({
     <header className="bg-panel border-b border-border z-30 sticky top-0 shrink-0 w-full transition-colors shadow-sm">
       {/* DrishtiScope Top Bar */}
       <div className="h-14 flex items-center justify-between px-3 sm:px-4 gap-2 w-full relative">
-        {/* Brand (Left) */}
+        {/* Brand & Mode Indicator (Left) - Single sleek line on all screen sizes */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-nowrap">
-          {/* DrishtiScope Brand & Logo */}
-          <div className="flex items-center gap-2 text-txt font-bold text-base sm:text-lg tracking-tight shrink-0">
-            <Logo size={32} />
-
-            <div className="hidden sm:flex flex-col shrink-0">
-              <div className="flex items-center gap-1.5 leading-none">
-                <span className="text-txt font-bold tracking-tight">DrishtiScope</span>
-                <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-cyan/15 text-cyan border border-cyan/30 font-mono">
-                  दृष्टि
-                </span>
-              </div>
-              <span className="text-[10px] font-normal text-muted leading-tight hidden lg:inline">
-                Real-Time Agentic AI & LLM Process Observability
-              </span>
-            </div>
+          <Logo size={28} />
+          <div className="flex items-center gap-1.5 leading-none shrink-0">
+            <span className="text-txt font-bold tracking-tight text-sm sm:text-base md:text-lg">
+              DrishtiScope
+            </span>
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-cyan/15 text-cyan border border-cyan/30 font-mono">
+              दृष्टि
+            </span>
           </div>
 
-          <div className="shrink-0">
+          <div className="shrink-0 ml-0.5 sm:ml-1">
             <ModeChip mode={mode} />
           </div>
         </div>
@@ -506,14 +557,14 @@ export function Header({
             />
           </div>
 
-          {/* Time Window Selector with Question Mark (?) Help - Strictly Single Line */}
-          <div className="hidden sm:flex items-center bg-panel2 border border-border rounded-lg p-0.5 text-[11px] font-mono gap-0.5 shrink-0 flex-nowrap whitespace-nowrap">
+          {/* Time Window Selector with Question Mark (?) Help - Visible Across All Screen Sizes */}
+          <div className="flex items-center bg-panel2 border border-border rounded-lg p-0.5 text-[10px] sm:text-[11px] font-mono gap-0.5 shrink-0 flex-nowrap whitespace-nowrap">
             {['1m', '5m', '15m', '1h'].map((tr) => (
               <button
                 key={tr}
                 type="button"
                 onClick={() => setTimeRange(tr)}
-                className={`px-1.5 py-0.5 rounded transition-colors shrink-0 whitespace-nowrap ${
+                className={`px-1 sm:px-1.5 py-0.5 rounded transition-colors shrink-0 whitespace-nowrap ${
                   timeRange === tr ? 'bg-cyan/20 text-cyan font-bold' : 'text-muted hover:text-txt'
                 }`}
                 title={`Observation time window: ${tr}`}
