@@ -422,6 +422,31 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) and submit a pull request!
 
 ---
 
+## 🛡️ Legal Disclaimers, Caveats & Liability Shields
+
+> [!IMPORTANT]
+> Please review these protective legal notices and operational terms carefully prior to compiling, running, or relying on DrishtiScope.
+
+### 1. Strictly Personal Capacity & Complete Non-Affiliation
+DrishtiScope is an independent, personal research, learning, and open-source project created and maintained by **Ramu Mangalarapu** strictly in an individual personal capacity, during personal leisure hours, and using personal computing equipment and resources. 
+
+**It is NOT affiliated with, sponsored by, endorsed by, or representative of any of the creator's current, past, or future employers, clients, consulting customers, contracting companies, universities, colleges, or academic institutions.** All opinions, architectural designs, technical statements, and source code are exclusively those of the author and independent open-source contributors, and do not represent the positions, strategies, or policies of any past, present, or prospective affiliated entities.
+
+### 2. Experimental Low-Level Kernel Software Provided "AS IS"
+DrishtiScope interfaces directly with low-level operating system internals, including Linux eBPF kprobes, tracepoints, raw `/proc` file structures, and Windows Event Tracing (ETW). Kernel-level observability tools inherently carry operational complexities and risks. 
+
+**This software is provided "AS IS", without warranty of any kind, express or implied**, including but not limited to the warranties of merchantability, fitness for a particular purpose, title, and non-infringement. As an evolving open-source project, the code **might contain mistakes, bugs, kernel-version-specific incompatibilities, or edge-case panics**.
+
+### 3. Absolute Limitation of Liability (Hold Harmless)
+Under no circumstances shall the author, creator, contributors, copyright holders, or affiliated parties be held liable for any direct, indirect, incidental, special, exemplary, punitive, or consequential damages (including, but not limited to, system crashes, kernel panics, operating system instability, data loss, file corruption, service downtime, business interruption, or hardware degradation) arising in any way from the installation, compilation, execution, configuration, misuse, or inability to use DrishtiScope. 
+
+**You download, build, and execute this software entirely at your own risk and discretion.** Users are strongly advised to thoroughly verify and test in isolated sandbox or non-production environments before deploying alongside critical production workloads.
+
+### 4. Universal Process Scope & Zero-Payload Privacy Boundary
+DrishtiScope monitors operating system telemetry (Process IDs, CPU and memory metrics, open file descriptors, network socket endpoints, and syscall rates) for any target process selected by the operator—whether an autonomous AI coding agent, a background daemon, a database engine, or a developer CLI tool. It is completely payload-agnostic: it does not inspect proprietary LLM model weights, private encryption keys, conversational text, or sensitive user secrets. Telemetry data stays 100% on your local machine and is never transmitted to any external cloud server.
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions from developers, Linux systems engineers, and AI researchers worldwide. Please see [CONTRIBUTING.md](CONTRIBUTING.md) for full development guidelines, testing standards, and architecture details.
