@@ -87,7 +87,7 @@ We are dedicated to providing a welcoming, inclusive, and harassment-free enviro
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/agentscope/agentscope.git
+git clone https://github.com/developer1622/drishtiscope-oss.git
 cd agentscope
 ```
 
