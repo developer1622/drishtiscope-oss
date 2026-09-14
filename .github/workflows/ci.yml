@@ -41,6 +41,44 @@ jobs:
       - name: Build Frontend Bundle
         run: npm run build
 
+  playwright:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Install Playwright Browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Build Backend
+        working-directory: backend
+        run: CGO_ENABLED=0 go build -o ../drishtiscope ./cmd/agentscope
+      - name: Run Playwright E2E Tests
+        working-directory: frontend
+        env:
+          DRISHTISCOPE_ADDR: "127.0.0.1:8080"
+        run: |
+          ../drishtiscope -addr=127.0.0.1:8080 -mode=mock &
+          sleep 2
+          npm run test:e2e
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+
   goreleaser:
     runs-on: ubuntu-latest
     steps:

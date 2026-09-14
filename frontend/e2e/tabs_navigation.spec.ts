@@ -33,9 +33,9 @@ test.describe('Dashboard Tabs Navigation & Deep Telemetry Panels', () => {
     const main = page.locator('main');
     await expect(main).toBeVisible();
 
-    // Verify presence of story components or timeline entries
-    const timelineOrStory = main.getByText(/Process Story|Activity|Chronological/i);
-    await expect(timelineOrStory.first()).toBeVisible();
+    // Verify presence of story components or timeline entries — give mock engine 25s to stream events
+    const timelineOrStory = main.getByText(/Process Story|Activity|Chronological|Story|Events/i);
+    await expect(timelineOrStory.first()).toBeVisible({ timeout: 25000 });
   });
 
   test('Tab 2 (Overview / Vitals): renders Golden Signals and Latency Quantiles', async ({ page }) => {

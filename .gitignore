@@ -46,3 +46,7 @@ backend/internal/ebpfagent/agent_bpfel.go
 backend/internal/ebpfagent/agent_bpfel.o
 backend/internal/ebpfagent/agent_bpfeb.go
 backend/internal/ebpfagent/agent_bpfeb.o
+
+# Test artifacts and local snapshot captures
+test-artifacts/
+results/snapshot_*.json

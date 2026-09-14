@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 
 const SCREENSHOT_DIR = path.join(__dirname, '../screenshots');
-const ARTIFACT_DIR = '/home/ramum/.gemini/antigravity-cli/brain/10549066-662d-4168-81a5-a80f55a3bfde';
+const ARTIFACT_DIR = path.join(__dirname, '../test-artifacts');
 
 if (!fs.existsSync(SCREENSHOT_DIR)) {
   fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });

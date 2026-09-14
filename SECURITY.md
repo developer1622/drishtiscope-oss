@@ -23,6 +23,7 @@ DrishtiScope is built with privacy and security by design:
 2. **Loopback by Default**: The Go server binds to `127.0.0.1:8080` by default. Binding to `0.0.0.0` without setting `AUTH_TOKEN` generates explicit warning logs and rejects unauthenticated remote connections with HTTP 403.
 3. **Safe Memory Management**: Go memory safety ensures freedom from buffer overflows, use-after-free, and memory corruption in the userspace daemon.
 4. **Verified eBPF Programs**: All eBPF programs pass the in-kernel BPF verifier, guaranteeing bounded execution, safe pointer arithmetic, and zero kernel panics.
+5. **Zero Hardcoded Secrets**: No API keys, tokens, or credentials are ever embedded in source code. All LLM API keys (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `ANTHROPIC_API_KEY`) and the optional `AUTH_TOKEN` are loaded exclusively via environment variables. See `.env.example` for a complete template. If a key is absent, the corresponding LLM provider is silently skipped and the built-in rule engine is used as fallback.
 
 ---
 

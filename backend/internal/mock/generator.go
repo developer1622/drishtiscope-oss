@@ -40,13 +40,13 @@ type MockGenerator struct {
 
 var (
 	agyFiles = []string{
-		"/home/ramum/.gemini/antigravity-cli/brain/10549066/transcript.jsonl",
-		"/home/ramum/agent-tracking/tracker.bpf.c",
-		"/home/ramum/agent-tracking/main.go",
+		"/home/devuser/.local/share/agy/brain/transcript.jsonl",
+		"/home/devuser/agent-tracking/tracker.bpf.c",
+		"/home/devuser/agent-tracking/main.go",
 		"/sys/kernel/debug/tracing/events/raw_syscalls/enable",
 		"/proc/self/status",
 		"/proc/self/stat",
-		"/home/ramum/.local/bin/agy",
+		"/home/devuser/.local/bin/agy",
 		"/var/run/docker.sock",
 	}
 
@@ -679,21 +679,21 @@ func buildSyscallStats(total float64, rng *rand.Rand) []agg.SyscallStat {
 func buildFileStatsForComm(comm string, rng *rand.Rand) []agg.FileStat {
 	if strings.Contains(strings.ToLower(comm), "copilot") {
 		return []agg.FileStat{
-			{Path: "/home/ramum/agentscope/frontend/src/pages/Dashboard.tsx", OpsS: 12.4 + rng.Float64()*4, BytesS: 8192 + rng.Float64()*4096, Errors: 0},
-			{Path: "/home/ramum/agentscope/backend/internal/enrich/proc.go", OpsS: 8.1 + rng.Float64()*3, BytesS: 4096 + rng.Float64()*2048, Errors: 0},
-			{Path: "/home/ramum/.copilot/logs/process-58785.log", OpsS: 2.2 + rng.Float64(), BytesS: 512, Errors: 0},
-			{Path: "/home/ramum/.vscode-server/data/logs/remoteagent.log", OpsS: 4.0 + rng.Float64()*2, BytesS: 1024, Errors: 0},
+			{Path: "/home/devuser/project/frontend/src/pages/Dashboard.tsx", OpsS: 12.4 + rng.Float64()*4, BytesS: 8192 + rng.Float64()*4096, Errors: 0},
+			{Path: "/home/devuser/project/backend/internal/enrich/proc.go", OpsS: 8.1 + rng.Float64()*3, BytesS: 4096 + rng.Float64()*2048, Errors: 0},
+			{Path: "/home/devuser/.copilot/logs/process-58785.log", OpsS: 2.2 + rng.Float64(), BytesS: 512, Errors: 0},
+			{Path: "/home/devuser/.vscode-server/data/logs/remoteagent.log", OpsS: 4.0 + rng.Float64()*2, BytesS: 1024, Errors: 0},
 			{Path: "/proc/self/status", OpsS: 6.0 + rng.Float64()*2, BytesS: 256, Errors: 0},
 			{Path: "/etc/passwd", OpsS: 0.1, BytesS: 0, Errors: 1},
 		}
 	}
 	if strings.EqualFold(comm, "agy") || strings.Contains(strings.ToLower(comm), "agy") {
 		return []agg.FileStat{
-			{Path: "/home/ramum/.gemini/antigravity-cli/brain/transcript.jsonl", OpsS: 18.5 + rng.Float64()*6, BytesS: 16384 + rng.Float64()*8192, Errors: 0},
-			{Path: "/home/ramum/agent-tracking/tracker.bpf.c", OpsS: 6.2 + rng.Float64()*2, BytesS: 4096, Errors: 0},
+			{Path: "/home/devuser/.local/share/agy/brain/transcript.jsonl", OpsS: 18.5 + rng.Float64()*6, BytesS: 16384 + rng.Float64()*8192, Errors: 0},
+			{Path: "/home/devuser/agent-tracking/tracker.bpf.c", OpsS: 6.2 + rng.Float64()*2, BytesS: 4096, Errors: 0},
 			{Path: "/sys/kernel/debug/tracing/trace_pipe", OpsS: 24.1 + rng.Float64()*10, BytesS: 32768 + rng.Float64()*16384, Errors: 0},
 			{Path: "/proc/self/status", OpsS: 8.0 + rng.Float64()*3, BytesS: 1024, Errors: 0},
-			{Path: "/home/ramum/.local/bin/agy", OpsS: 1.2 + rng.Float64(), BytesS: 65536, Errors: 0},
+			{Path: "/home/devuser/.local/bin/agy", OpsS: 1.2 + rng.Float64(), BytesS: 65536, Errors: 0},
 			{Path: "/proc/kallsyms", OpsS: 0.1, BytesS: 0, Errors: 1},
 		}
 	}

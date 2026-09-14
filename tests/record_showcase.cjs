@@ -9,8 +9,8 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 
 const VIDEO_DIR = path.join(__dirname, '../videos');
-const ARTIFACT_DIR = '/home/ramum/.gemini/antigravity-cli/brain/10549066-662d-4168-81a5-a80f55a3bfde';
-const FFMPEG = '/home/ramum/agentscope/frontend/node_modules/ffmpeg-static/ffmpeg';
+const ARTIFACT_DIR = path.join(__dirname, '../test-artifacts');
+const FFMPEG = process.env.FFMPEG_PATH || 'ffmpeg'; // set FFMPEG_PATH env var or ensure ffmpeg is in PATH
 
 if (!fs.existsSync(VIDEO_DIR)) {
   fs.mkdirSync(VIDEO_DIR, { recursive: true });

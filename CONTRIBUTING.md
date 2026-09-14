@@ -193,6 +193,26 @@ cd frontend
 npm run build
 ```
 
+### Running E2E Playwright Tests
+
+DrishtiScope ships a full Playwright E2E suite covering all 5 dashboard tabs, the metric help encyclopedia, the AI copilot drawer, the process search omnibox, and telemetry mode switching.
+
+```bash
+# Start the backend in mock mode (for reproducible tests)
+cd backend && go run ./cmd/agentscope -mode=mock -addr=127.0.0.1:8080 &
+
+# In a separate terminal, run Playwright
+cd frontend
+npm run test:e2e
+```
+
+To view an interactive HTML test report after a run:
+```bash
+npx playwright show-report
+```
+
+The CI pipeline also runs Playwright automatically on every PR via the `playwright` job in `.github/workflows/ci.yml`.
+
 ---
 
 ## 🚢 Submitting a Pull Request
