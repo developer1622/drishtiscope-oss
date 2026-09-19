@@ -1,6 +1,9 @@
 # DrishtiScope Frontend Console
 
-The **DrishtiScope Frontend** is a modern, high-density observability console built with **React 18**, **TypeScript**, **Tailwind CSS**, **Recharts**, and **Zustand**. It provides sub-second live telemetry rendering, interactive metric help popups, an AI copilot chat drawer, and 5 ergonomic color themes with Light Mode as default.
+The **DrishtiScope Frontend** is a modern, high-density observability console built with **React 18**, **TypeScript**, **Tailwind CSS**, **Recharts**, and **Zustand**. It provides sub-second live telemetry rendering, interactive metric help popups, an observability copilot chat drawer, and 5 ergonomic color themes with Light Mode as default.
+
+> [!NOTE]
+> **Universal Process Monitoring**: The frontend console visualizes operating system metrics for **any target process**—including web servers, developer tools, compilers, databases, background daemons, and AI agent runtimes.
 
 ---
 
@@ -14,13 +17,13 @@ frontend/
 │   │   ├── StatusBar.tsx           # Sticky bottom bar with dropped events, ingest rate, motto & kernel info
 │   │   ├── MetricHelpModal.tsx     # Popup modal explaining metrics with plain English analogies & verification CLI commands
 │   │   ├── GraphScratchpad.tsx     # Dynamic graph scratchpad & Linux playground for on-demand metric curves
-│   │   ├── ChatDrawer.tsx          # Floating AI Observability Copilot chat drawer with live snapshot context
+│   │   ├── ChatDrawer.tsx          # Floating Observability Copilot chat drawer with live snapshot context
 │   │   ├── ModeChip.tsx            # Pulsing status chip: REAL LIVE (cyan), EBPF LIVE (green), or MOCK (amber)
 │   │   ├── KPITile.tsx             # High-density vital tiles with SVG sparklines and threshold indicators
 │   │   ├── ProcessTable.tsx        # Real-time process listing with CPU%, RSS, state, FDs, and "Set Target" action
 │   │   ├── TabBanner.tsx           # Educational banner at the top of each tab explaining its purpose
 │   │   └── tabs/
-│   │       ├── StoryTab.tsx        # Tab 1: Chronological process story, AI verdict, and one-click Linux diagnostics
+│   │       ├── StoryTab.tsx        # Tab 1: Chronological process story, operational status, and one-click Linux diagnostics
 │   │       ├── BasicTab.tsx        # Tab 2: Overview of SRE Golden Signals, latency quantiles, and waveform
 │   │       ├── MediumTab.tsx       # Tab 3: Execution call trees, continuous flamegraph profiler, Perfetto export
 │   │       ├── AdvancedTab.tsx     # Tab 4: Metrics Query Language (MQL) console, subsystem donuts, disk IOPS
@@ -66,7 +69,7 @@ Theme selection is persistent in `localStorage` and switchable instantly via the
 
 ## ⚡ Anti-Flicker & Stream Control
 
-High-frequency telemetry streams (e.g. 200ms–400ms updates) often cause screen flicker and eye strain. DrishtiScope solves this with:
+High-frequency telemetry streams (e.g. 200ms–400ms updates) can cause visual elements to constantly update, leading to eye fatigue. DrishtiScope solves this with:
 
 - **Stream Refresh Rate Dropdown**: Choose between `500ms` (Rapid), `1s` (Balanced), `2s` (Calm default), `5s` (Relaxed), or `Manual` (Pause live updates).
 - **Anti-Flicker Smooth Toggle**:
@@ -79,9 +82,9 @@ High-frequency telemetry streams (e.g. 200ms–400ms updates) often cause screen
 ## ❓ Metric Encyclopedia `(?)`
 
 Every single KPI tile, chart header, and stream control features a colorful question mark glyph `(?)`. Clicking it opens the **Metric Help Modal**:
-- **Plain English Analogy**: Explains the metric in intuitive terms (e.g., comparing runqueue latency to a grocery store checkout line).
+- **Plain English Analogy**: Explains the metric in intuitive terms (e.g., comparing runqueue latency to a checkout counter queue).
 - **Healthy / Warning / Critical Bands**: Specific numerical thresholds.
-- **Why AI Agents Care**: Concrete impact on LLM loops, token generation, or tool calls.
+- **Operational Impact**: Explains how resource saturation impacts process execution and system stability.
 - **Linux Verification Command**: Pre-formatted terminal commands (`pidstat`, `strace`, `ss`, `lsof`) with one-click copy.
 - **Kernel Source Location**: Exact Linux kernel file where the metric originates (e.g. `kernel/sched/core.c`, `/proc/[pid]/io`).
 
@@ -96,7 +99,7 @@ Located at the bottom of the dashboard, the **Graph Scratchpad** lets engineers 
   - *Bidirectional Network Throughput (Tx vs Rx)*
   - *Thread Count vs RSS Memory Usage*
   - *Page Fault Dynamics (Minor vs Major Faults)*
-- Dynamically triggered by the AI Copilot when users ask to visualize specific correlations.
+- Dynamically triggered by the Copilot when users ask to visualize specific correlations.
 
 ---
 
@@ -106,13 +109,13 @@ The header incorporates a high-efficiency process search omnibox designed for li
 - **Global Keyboard Shortcut (`/`)**: Press `/` anywhere to focus the omnibox instantly.
 - **Dynamic Suggestions**: Automatically detects and lists executing processes ranked by CPU% and memory.
 - **Keyboard Navigation**: Use `ArrowDown` / `ArrowUp` to cycle through candidates, `Enter` to select, and `Escape` to dismiss.
-- **Direct Filtering**: Search by process name (`agy`, `python`, `node`) or exact PID (`143399`).
+- **Direct Filtering**: Search by process name (`python`, `node`, `my-service`, `powershell`) or exact PID (`1234`).
 
 ---
 
-## 🤖 AI Observability Copilot Chat Drawer
+## 🤖 Observability Copilot Chat Drawer
 
-Clicking the floating bot icon in the bottom-right corner slides open the **Agent Copilot**:
+Clicking the floating bot icon in the bottom-right corner slides open the **Observability Copilot**:
 - **Local Rule Engine**: Evaluates live snapshot metrics and diagnoses performance bottlenecks with zero API keys.
 - **Natural Language Analysis**: With an optional API key configured (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`), the Copilot analyzes memory growth, file descriptor leaks, or network stalls in context. Keys are strictly read from server environment variables and never bundled or sent to the browser.
 

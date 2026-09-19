@@ -1,6 +1,9 @@
 # Microsoft eBPF for Windows Integration Guide
 
-DrishtiScope provides first-class, cross-platform telemetry observability across Linux, Windows, and macOS. This document outlines how DrishtiScope integrates with **[Microsoft eBPF for Windows](https://github.com/microsoft/ebpf-for-windows)**.
+DrishtiScope provides cross-platform telemetry observability across Linux, Windows, and macOS. This document outlines how DrishtiScope integrates with **[Microsoft eBPF for Windows](https://github.com/microsoft/ebpf-for-windows)**.
+
+> [!NOTE]
+> **Universal Process Monitoring on Windows**: On Windows 10/11 and Windows Server, DrishtiScope can monitor **any active process** (e.g. `powershell.exe`, `node.exe`, `python.exe`, or custom backend services) using native Win32 process scanning (`tasklist.exe`), with optional kernel probe support when the Microsoft eBPF for Windows driver is installed.
 
 ---
 
@@ -9,7 +12,7 @@ DrishtiScope provides first-class, cross-platform telemetry observability across
 ```
                      ┌──────────────────────────────────────────────┐
                      │          DrishtiScope UI (React/TS)          │
-                     │  Agent Golden Signals • Process • Net • Files │
+                     │  Process Signals • Memory • Net • Files      │
                      └──────────────────────▲───────────────────────┘
                                             │ WebSocket JSON (:8080/ws)
                      ┌──────────────────────┴───────────────────────┐
@@ -17,11 +20,11 @@ DrishtiScope provides first-class, cross-platform telemetry observability across
                      │      CGO_ENABLED=0 • modernc.org/sqlite      │
                      └──────▲───────────────────────────────▲───────┘
                             │                               │
-              Windows Driver Detection               Fallback Engine
+               Windows Driver Detection               Fallback Engine
                             │                               │
         ┌───────────────────┴──────────────────┐    ┌───────┴──────────────┐
         │       \\.\EbpfCoreDevice             │    │ Multi-Profile Mock   │
-        │    Windows eBPF Core Driver          │    │ agy / node / dockerd │
+        │    Windows eBPF Core Driver          │    │ python / node / app  │
         └───────────────────▲──────────────────┘    └──────────────────────┘
                             │
         ┌───────────────────┴──────────────────┐
@@ -37,14 +40,14 @@ DrishtiScope provides first-class, cross-platform telemetry observability across
    - Queries the Windows Service Control Manager (`sc.exe query ebpfcore`) to confirm `ebpfcore.sys` service state.
 2. **Graceful Dual-Mode Fallback**:
    - When the eBPF drivers and execution device are active, attaches to kernel/driver hooks.
-   - When the driver is not yet installed or execution privileges are limited, safely falls back to DrishtiScope's high-fidelity synthetic telemetry engine while notifying the dashboard via WebSocket hello frame metadata (`mode="mock"`, `modeReason="windows ebpfcore driver not detected; using synthetic engine"`).
+   - When the driver is not installed or execution privileges are limited, safely falls back to DrishtiScope's Real Engine (via `tasklist.exe` and ETW bridge) or synthetic telemetry engine while notifying the dashboard via WebSocket metadata.
 3. **CGO-Free Cross-Compilation**:
    - Built with `CGO_ENABLED=0` to ensure true zero-dependency cross-compilation from Linux/CI hosts to Windows (`windows/amd64`, `windows/arm64`) and macOS (`darwin/amd64`, `darwin/arm64`).
    - SQLite TSDB utilizes `modernc.org/sqlite` (pure Go implementation of SQLite), completely removing external C compiler dependencies.
 
 ---
 
-## 2. Installing Microsoft eBPF for Windows
+## 2. Installing Microsoft eBPF for Windows (Optional)
 
 To run with real eBPF kernel hooks on Windows 10/11 or Windows Server 2022+:
 
@@ -68,10 +71,10 @@ Get-Item -LiteralPath "\\.\EbpfCoreDevice" -ErrorAction SilentlyContinue
 ```
 
 ### Step 3: Run DrishtiScope
-Extract the Windows release archive from GoReleaser (`drishtiscope_1.0.1-snapshot_windows_amd64.zip`):
+Extract the Windows release archive from GoReleaser (`drishtiscope_windows_amd64.zip`):
 
 ```powershell
-.\drishtiscope.exe --addr 127.0.0.1:8080 --comm agy
+.\drishtiscope.exe --addr 127.0.0.1:8080 --comm powershell
 ```
 
 ---
@@ -95,11 +98,7 @@ DrishtiScope packages releases across 6 target platforms using [GoReleaser](http
 goreleaser check
 
 # Build release artifacts snapshot
-goreleaser release --snapshot --clean
-
-# Inspect archives and checksums
-ls -lh dist/
-cat dist/checksums.txt
+goreleaser build --snapshot --clean
 ```
 
 ---

@@ -2,19 +2,22 @@
 
 This document details the architectural design, kernel interaction model, time-series storage, WebSocket protocol, and frontend data pipeline of **DrishtiScope (दृष्टिScope)**.
 
+> [!NOTE]
+> **Universal Process Observability**: DrishtiScope is engineered to observe **any process** executing on the host operating system—including backend web services, background workers, compilers, developer CLI utilities, and AI agent runtimes.
+
 ---
 
 ## 1. High-Level System Architecture
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
-│                             Linux Host OS                                  │
+│                             Host Operating System                          │
 │                                                                            │
 │  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │                     Target AI Agent Process                          │  │
-│  │              (codex, agy, copilot, claude-code, node)                │  │
+│  │                     Target Process                                   │  │
+│  │       (e.g., node, python, go-service, compiler, worker, app)        │  │
 │  │                                                                      │  │
-│  │   • execve("bash") / vfork()         • TLS socket to model API       │  │
+│  │   • execve() / vfork() subprocesses  • Network sockets (TCP/TLS)     │  │
 │  │   • read/write workspace files       • epoll_wait & futex loops      │  │
 │  └──────────────────┬─────────────────────────────────┬─────────────────┘  │
 │                     │                                 │                    │
@@ -40,6 +43,7 @@ This document details the architectural design, kernel interaction model, time-s
 │                     │ • WebSocket Broadcast Hub       │                    │
 │                     │ • Local Rule Diagnostic Engine  │                    │
 │                     └────────────────┬────────────────┘                    │
+│                                      │                                     │
 └──────────────────────────────────────┼─────────────────────────────────────┘
                                        │
                     WebSocket & REST   │ HTTP (:8080 / :5173)
@@ -49,13 +53,13 @@ This document details the architectural design, kernel interaction model, time-s
 │                                                                            │
 │   • Header: Unified Omnibox, Stream Controls (Live/Paused), Theme Selector │
 │   • Ribbon: 8 KPI Vitals with SVG Sparklines & (?) Help Glyphs             │
-│   • Tab 1: Process Story (Chronological Timeline & AI Executive Verdict)   │
+│   • Tab 1: Process Story (Chronological Timeline & Operational Status)     │
 │   • Tab 2: Overview (Golden Signals: Latency Quantiles, Traffic Waveform)  │
 │   • Tab 3: Execution & CPU (Continuous Flamegraph, Perfetto Export)         │
 │   • Tab 4: System Metrics (Metrics Query Language MQL, Subsystem Donuts)   │
-│   • Tab 5: Security & Logs (AI Workload Radar, Denial Audit, System Tree)  │
+│   • Tab 5: Security & Logs (Workload Profile Radar, Denial Audit, Logs)     │
 │   • Dynamic Graph Scratchpad & Linux Playground                            │
-│   • AI Observability Copilot Chat Drawer                                   │
+│   • Observability Copilot Chat Drawer                                      │
 │   • Sticky Footer: Event Rate, Ingest Counters, Motto & Health Signals     │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -64,14 +68,14 @@ This document details the architectural design, kernel interaction model, time-s
 
 ## 2. Ingestion Pipeline & Dual-Engine Fallback
 
-DrishtiScope uses a dual-engine architecture to operate seamlessly across both enterprise bare-metal Linux servers and developer laptops:
+DrishtiScope uses a dual-engine architecture to operate seamlessly across both enterprise servers and developer laptops:
 
 ### Kernel Tracepoint Engine (`mode=ebpf`)
 When executed with `CAP_BPF` or `root`:
 - Program compiled via Clang/LLVM with BPF CO-RE (`agent.bpf.c`).
 - Maps:
   - `events`: `BPF_MAP_TYPE_RINGBUF` (16MB capacity).
-  - `start_times`: `BPF_MAP_TYPE_HASH` for nanosecond syscall latency measurement.
+  - `start_times`: `BPF_MAP_TYPE_HASH` for nanosecond system call latency measurement.
   - `config`: `BPF_MAP_TYPE_ARRAY` storing target TGID filters.
 - Probe points:
   - `tracepoint/raw_syscalls/sys_enter`: Records start timestamp into `start_times`.
@@ -106,7 +110,7 @@ Every WebSocket message and snapshot response conforms to the Version 1 Envelope
       "dropped_events": 0,
       "event_rate": 14.5,
       "uptime_s": 285.4,
-      "target": { "pid": 113971, "comm": "agy" }
+      "target": { "pid": 1234, "comm": "my-service" }
     },
     "kpis": {
       "cpu_pct": 34.66,
@@ -158,4 +162,4 @@ Every WebSocket message and snapshot response conforms to the Version 1 Envelope
 
 1. **Loopback Only**: By default, DrishtiScope binds strictly to `127.0.0.1:8080`.
 2. **Bearer Authentication**: When binding to public interfaces, `AUTH_TOKEN` is mandatory. Unauthenticated requests receive HTTP 401/403.
-3. **Payload Sanitization**: DrishtiScope adheres to a strict zero-payload principle. It does not inspect TLS contents, model prompts, or completion tokens.
+3. **Payload Sanitization**: DrishtiScope adheres to a strict zero-payload principle. It does not inspect TLS contents, prompt text, or completion tokens.

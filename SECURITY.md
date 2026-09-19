@@ -1,12 +1,12 @@
 # Security Policy — DrishtiScope
 
-DrishtiScope (दृष्टिScope) is committed to ensuring the highest standards of security, privacy, and system integrity. Because DrishtiScope interacts closely with the Linux kernel and processes, we treat security vulnerabilities with high urgency.
+DrishtiScope (दृष्टिScope) is committed to ensuring high standards of security, privacy, and system integrity. Because DrishtiScope interacts with operating system kernel interfaces and host processes, security and stability are fundamental priorities.
 
 ---
 
 ## 🛡️ Supported Versions
 
-We provide security updates for the following versions:
+Security updates are provided for the following versions:
 
 | Version | Supported |
 | :--- | :--- |
@@ -17,13 +17,13 @@ We provide security updates for the following versions:
 
 ## 🔒 Security Architecture & Guarantees
 
-DrishtiScope is built with privacy and security by design:
+DrishtiScope is designed with privacy, safety, and isolation in mind:
 
-1. **Zero Payload Sniffing**: DrishtiScope does **not** intercept, decrypt, or record TLS payloads, model prompts, completions, or LLM token strings. It strictly observes process and kernel metadata (syscalls, file paths, socket states, and CPU/memory vitals).
-2. **Loopback by Default**: The Go server binds to `127.0.0.1:8080` by default. Binding to `0.0.0.0` without setting `AUTH_TOKEN` generates explicit warning logs and rejects unauthenticated remote connections with HTTP 403.
-3. **Safe Memory Management**: Go memory safety ensures freedom from buffer overflows, use-after-free, and memory corruption in the userspace daemon.
-4. **Verified eBPF Programs**: All eBPF programs pass the in-kernel BPF verifier, guaranteeing bounded execution, safe pointer arithmetic, and zero kernel panics.
-5. **Zero Hardcoded Secrets**: No API keys, tokens, or credentials are ever embedded in source code. All LLM API keys (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `ANTHROPIC_API_KEY`) and the optional `AUTH_TOKEN` are loaded exclusively via environment variables. See `.env.example` for a complete template. If a key is absent, the corresponding LLM provider is silently skipped and the built-in rule engine is used as fallback.
+1. **Zero Payload Inspection**: DrishtiScope does **not** intercept, decrypt, or record network payloads, user documents, prompt text, or confidential application contents. It strictly observes system metadata (system calls, file paths, socket endpoints/states, and CPU/memory vitals).
+2. **Loopback by Default**: The daemon binds strictly to `127.0.0.1:8080` by default. Binding to public interfaces (`0.0.0.0`) without setting `AUTH_TOKEN` generates explicit warning logs and rejects unauthenticated remote connections.
+3. **Memory Safety**: The userspace daemon is written in Go, providing automatic bounds checking and safe memory handling.
+4. **Verified eBPF Programs**: All in-kernel eBPF programs are verified by the Linux kernel BPF verifier prior to loading, guaranteeing bounded loops, safe memory access, and zero kernel instability.
+5. **Zero Hardcoded Secrets**: No API keys, passwords, or credentials are ever embedded in the repository. All optional diagnostic credentials and authentication tokens are loaded strictly via environment variables at runtime.
 
 ---
 
@@ -37,4 +37,4 @@ If you discover a potential security vulnerability in DrishtiScope, please **do 
    - Detailed description of the vulnerability and affected components.
    - Proof-of-concept steps to reproduce.
    - Potential impact on the host system or monitored processes.
-4. Our maintainers will acknowledge receipt within 48 hours and coordinate a fix and advisory.
+4. Maintainers will review the submission promptly and coordinate a fix.

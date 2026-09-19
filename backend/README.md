@@ -1,6 +1,9 @@
 # DrishtiScope Backend Daemon
 
-The **DrishtiScope Backend** is a high-performance, single-binary Go daemon that extracts kernel and process telemetry from the Linux host, aggregates agent vitals, writes time-series snapshots to an embedded SQLite database, and broadcasts live telemetry over WebSockets.
+The **DrishtiScope Backend** is a lightweight, high-performance, single-binary Go daemon that extracts kernel and process telemetry from the host operating system, aggregates process vitals, writes time-series snapshots to an embedded SQLite database, and broadcasts live telemetry over WebSockets.
+
+> [!NOTE]
+> **Universal Process Scope**: The backend can observe **any target process** running on the host machine—including web servers, database engines, build tools, background workers, CLI scripts, and AI agent runtimes.
 
 ---
 
@@ -12,12 +15,12 @@ backend/
 │   └── main.go                 # Process entry point, flag parsing, signal handling, fan-out
 ├── internal/
 │   ├── realengine/
-│   │   ├── engine.go           # 100% Real-world Linux /proc & host kernel telemetry collector
+│   │   ├── engine.go           # 100% Real-world Linux /proc & Windows process telemetry collector
 │   │   └── engine_test.go      # Unit tests for RealEngine
 │   ├── ebpfagent/
 │   │   ├── agent.go            # Cilium eBPF collection loader & ring-buffer consumer (Linux)
-│   │   ├── agent_windows.go    # Experimental Microsoft eBPF for Windows stub
-│   │   ├── agent_darwin.go     # macOS stub
+│   │   ├── agent_windows.go    # Microsoft eBPF for Windows & ETW integration
+│   │   ├── agent_darwin.go     # macOS demonstration stub
 │   │   └── agent_test.go       # eBPF tests
 │   ├── enrich/
 │   │   ├── proc.go             # /proc/[pid] parser: stat, statm, status, io, fd, net/tcp
@@ -28,7 +31,7 @@ backend/
 │   ├── api/
 │   │   ├── server.go           # HTTP server routing, timeouts, middleware, SPA file server
 │   │   ├── handlers.go         # REST endpoints: /api/health, /api/snapshot, /api/target, /ws
-│   │   ├── chat.go             # AI Copilot handler with local rule engine & LLM provider dispatch
+│   │   ├── chat.go             # Copilot handler with local rule engine & optional LLM dispatch
 │   │   └── middleware.go       # CORS, loopback enforcement, rate limiter, security headers
 │   ├── hub/
 │   │   ├── hub.go              # WebSocket broadcast hub with slow-client disconnection
@@ -55,7 +58,7 @@ DrishtiScope incorporates two distinct collection engines to deliver maximum fid
 
 ### 1. Real Engine (`mode=real`)
 Designed to run with **zero root privileges** on developer laptops, workstations, and WSL2 environments.
-- Scans `/proc` at each snapshot interval (default: 1.5s or 400ms).
+- Scans `/proc` (on Linux/WSL) or Windows process tables at each snapshot interval (default: 1.5s or 400ms).
 - Calculates exact CPU% from `/proc/[pid]/stat` user and kernel time ticks.
 - Reads resident memory (RSS) and virtual memory (VMS) from `/proc/[pid]/statm`.
 - Resolves open file descriptors and physical paths via `/proc/[pid]/fd/*`.
@@ -83,10 +86,10 @@ Attempts eBPF probe attachment first. If the kernel denies unprivileged BPF load
 | `/api/health` | `GET` | Health check reporting mode (`real` or `ebpf`), uptime, client count, and target PID. |
 | `/api/meta` | `GET` | System metadata: hostname, kernel version, schema version, and target process. |
 | `/api/snapshot` | `GET` | The most recent complete snapshot of KPIs, processes, files, sockets, and timeline. |
-| `/api/target` | `POST` | Dynamically updates the active target process by PID or comm name (`{"pid": 113971, "comm": "agy"}`). |
+| `/api/target` | `POST` | Dynamically updates the active target process by PID or comm name (`{"pid": 1234, "comm": "python"}`). |
 | `/api/history` | `GET` | Historical time-series points from the embedded SQLite database. |
 | `/api/events/history` | `GET` | Recent security, lifecycle, and file events from SQLite storage. |
-| `/api/v1/chat` | `POST` | AI Observability Copilot endpoint: evaluates live snapshots and returns diagnoses. |
+| `/api/v1/chat` | `POST` | Observability Copilot endpoint: evaluates live snapshots and returns diagnoses. |
 | `/ws` | `GET` | WebSocket endpoint: upgrades connection and streams snapshots (400ms–2s) and events. |
 | `/metrics` | `GET` | Prometheus OpenMetrics scraping endpoint. |
 | `/healthz` | `GET` | Kubernetes liveness and readiness probe endpoint (returns `200 OK`). |
@@ -114,14 +117,14 @@ go build -ldflags="-s -w" -o drishtiscope ./cmd/agentscope
 # Build Windows binary (.exe)
 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o drishtiscope.exe ./cmd/agentscope
 
-# Run on Linux/WSL in Real Mode targeting an autonomous agent
-./drishtiscope -mode=real -comm=agy
+# Run on Linux/WSL in Real Mode targeting any process (e.g., python, node, my-service)
+./drishtiscope -mode=real -comm=python
 
 # Run on Linux with eBPF privileges
-sudo ./drishtiscope -mode=ebpf -comm=codex
+sudo ./drishtiscope -mode=ebpf -comm=my-service
 
 # Run natively on Windows (PowerShell)
-.\drishtiscope.exe -mode=real -comm=agy
+.\drishtiscope.exe -mode=real -comm=powershell
 
 # Serve prebuilt frontend dist directly
 ./drishtiscope -mode=real -static=../frontend/dist
@@ -132,5 +135,5 @@ sudo ./drishtiscope -mode=ebpf -comm=codex
 ## 🔒 Security, Secrets & Loopback Defaults
 
 - **OWASP Compliance**: By default, DrishtiScope listens only on local interfaces (`127.0.0.1:8080`). Remote interfaces require passing `AUTH_TOKEN` in the environment to enforce HTTP Bearer authentication and WebSocket token validation.
-- **Zero Hardcoded Secrets**: All external LLM credentials (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`) are read strictly from host environment variables at runtime. No keys or tokens are stored, cached, or bundled into binaries.
+- **Zero Hardcoded Secrets**: All optional LLM credentials (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`) are read strictly from host environment variables at runtime. No keys or tokens are stored, cached, or bundled into binaries.
 - **Payload Privacy**: Zero payload interception. No prompt text, tokens, or model response strings are stored or transmitted.

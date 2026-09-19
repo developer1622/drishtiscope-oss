@@ -1,8 +1,8 @@
 # Contributing to DrishtiScope (दृष्टिScope)
 
-Thank you for your interest in contributing to **DrishtiScope**! DrishtiScope is an open-source, high-performance, real-time observability platform specifically designed to monitor, trace, and understand **Agentic AI & LLM runtime processes** (e.g. `codex`, `agy`, `copilot`, `node`, `python`, `grok`) at the Linux kernel level without requiring code changes to the target agents.
+Thank you for your interest in contributing to **DrishtiScope**! DrishtiScope is an open-source, high-performance, real-time observability platform designed to monitor, trace, and understand **any running process** on Linux and Windows (e.g. backend web services, compilers, developer CLI utilities, background workers, and AI agent runtimes) at the operating system level without requiring code changes to the target process.
 
-We welcome contributions from developers, Linux systems engineers, kernel hackers, site reliability specialists, and AI researchers worldwide.
+We welcome contributions from developers, Linux systems engineers, kernel enthusiasts, site reliability specialists, and open-source contributors worldwide.
 
 ---
 
@@ -21,7 +21,7 @@ We welcome contributions from developers, Linux systems engineers, kernel hacker
 ---
 
 ## 🤝 Code of Conduct
-We are dedicated to providing a welcoming, inclusive, and harassment-free environment for everyone. Please treat all contributors and maintainers with respect and empathy.
+We are dedicated to providing a welcoming, inclusive, and harassment-free environment for everyone. Please treat all contributors and maintainers with kindness, respect, and empathy.
 
 ---
 
@@ -29,8 +29,8 @@ We are dedicated to providing a welcoming, inclusive, and harassment-free enviro
 
 ```
                       ┌─────────────────────────────────┐
-                      │    Target Agent Process         │
-                      │  (codex, agy, copilot, node)    │
+                      │        Target Process           │
+                      │  (e.g., node, python, worker)   │
                       └──────────────┬──────────────────┘
                                      │
          ┌───────────────────────────┴──────────────────────────┐
@@ -39,7 +39,7 @@ We are dedicated to providing a welcoming, inclusive, and harassment-free enviro
   [Linux Kernel Space]                                  [Userspace /proc]
   eBPF Tracepoints:                                     /proc/[pid]/stat, status,
   • raw_syscalls:sys_enter/sys_exit                      statm, io, fd, net/tcp
-  • sched_process_exec / sched_process_exit              Real agent scanning
+  • sched_process_exec / sched_process_exit              Real process scanning
          │                                                      │
          └───────────────────────────┬──────────────────────────┘
                                      │
@@ -52,7 +52,7 @@ We are dedicated to providing a welcoming, inclusive, and harassment-free enviro
                      │ • Embedded SQLite TSDB (WAL)  │
                      │ • Prometheus /metrics         │
                      │ • Perfetto & Structured Logs  │
-                     │ • LLM Agent Copilot API       │
+                     │ • Copilot Diagnostic API      │
                      └──────────────┬────────────────┘
                                     │ WebSocket (400ms ticks)
                                     ▼
@@ -66,7 +66,7 @@ We are dedicated to providing a welcoming, inclusive, and harassment-free enviro
                      │ 4. System Metrics (Telemetry) │
                      │ 5. Security & Logs (Audit)    │
                      │ • Metric Help Encyclopedia    │
-                     │ • Interactive Agent Copilot   │
+                     │ • Interactive Copilot Drawer  │
                      └───────────────────────────────┘
 ```
 
@@ -88,7 +88,7 @@ We are dedicated to providing a welcoming, inclusive, and harassment-free enviro
 ### 1. Clone Repository
 ```bash
 git clone https://github.com/developer1622/drishtiscope-oss.git
-cd agentscope
+cd drishtiscope-oss
 ```
 
 ### 2. Run Backend
@@ -98,7 +98,7 @@ cd backend
 go run ./cmd/agentscope
 ```
 The server will start on `http://127.0.0.1:8080`.
-By default, it automatically scans `/proc` for running agents (`codex`, `agy`, `copilot`, `node`) and collects live kernel vitals.
+By default, it automatically scans for running processes (such as `python`, `node`, `my-service`) and collects live kernel vitals.
 
 ### 3. Run Frontend
 In a second terminal:
@@ -116,10 +116,10 @@ Open `http://localhost:5173` in your browser. The Vite dev server will connect t
 - **Tech Stack**: React 18, TypeScript, Tailwind CSS, Recharts, Lucide Icons, Zustand.
 - **Anti-Flicker Mode**: Ensure all Recharts components use `isAnimationActive={!antiFlicker}` (retrieved from `useScopeStore`) to prevent UI stutter and eye-strain during 400ms streaming updates.
 - **Type Safety**: No `any` types. Run `npx tsc --noEmit` before submitting.
-- **Branding Guidelines**:
-  - DrishtiScope is fully open source and vendor-neutral.
-  - Do not hardcode specific cloud vendor names in UI headers or general component copy.
-  - The tool is dedicated to **Agentic AI & LLM Process Observability**.
+- **Tone & Scope**:
+  - DrishtiScope is an open-source, vendor-neutral tool.
+  - Avoid mentioning specific commercial products or comparing against vendor tools in UI copy.
+  - The tool is dedicated to **Universal Process Observability** across any Linux or Windows workload.
 - **Process Hierarchy**:
   - Always allow users to click any process in the hierarchy or process table and toggle it as the active target using `setSelectedPid()` and `setTarget()`.
 
@@ -132,7 +132,7 @@ Open `http://localhost:5173` in your browser. The Vite dev server will connect t
   - `internal/api/`: HTTP endpoints (`/api/snapshot`, `/api/target`, `/api/chat`, `/api/history`, `/metrics`, `/healthz`).
   - `internal/agg/`: Ring buffers, exponential moving averages, snapshot aggregation.
   - `internal/enrich/`: `/proc` parsers (`stat`, `statm`, `io`, `fd`, `net/tcp`).
-  - `internal/mock/realproc.go`: Real process inspector for running AI agent environments.
+  - `internal/mock/realproc.go`: Real process inspector for running application environments.
   - `internal/ebpfagent/`: Cilium eBPF probe loader and ringbuf reader.
   - `internal/storage/`: SQLite TSDB engine with WAL checkpointing.
 - **Code Style**:
@@ -163,7 +163,7 @@ To add or update metric explanations:
        warning: string;
        critical: string;
      };
-     whyAiAgentsCare: string; // Why this matters specifically for LLMs/Agents
+     whyAiAgentsCare: string; // Operational impact on the process and system
      linuxAdminCommand: string; // Copyable Linux command to verify independently
      kernelDataSource: string; // Kernel file or eBPF probe source
    }
@@ -195,7 +195,7 @@ npm run build
 
 ### Running E2E Playwright Tests
 
-DrishtiScope ships a full Playwright E2E suite covering all 5 dashboard tabs, the metric help encyclopedia, the AI copilot drawer, the process search omnibox, and telemetry mode switching.
+DrishtiScope ships a full Playwright E2E suite covering all 5 dashboard tabs, the metric help encyclopedia, the copilot drawer, the process search omnibox, and telemetry mode switching.
 
 ```bash
 # Start the backend in mock mode (for reproducible tests)
@@ -218,7 +218,7 @@ The CI pipeline also runs Playwright automatically on every PR via the `playwrig
 ## 🚢 Submitting a Pull Request
 
 1. Fork the repository on GitHub.
-2. Create a feature branch: `git checkout -b feature/agent-memory-tracing`.
+2. Create a feature branch: `git checkout -b feature/process-memory-tracing`.
 3. Commit your changes with clear, descriptive commit messages:
    - `feat: add thread pool latency histogram to StoryTab`
    - `fix: prevent layout shift on high-frequency socket reconnect`
@@ -227,8 +227,8 @@ The CI pipeline also runs Playwright automatically on every PR via the `playwrig
    cd backend && go test ./...
    cd ../frontend && npm run build
    ```
-5. Push to your fork and submit a PR to `master` / `main`.
-6. Maintainers will review your PR and provide feedback.
+5. Push to your fork and submit a PR to `main`.
+6. Maintainers will review your PR and provide constructive feedback.
 
 ---
 
@@ -245,4 +245,6 @@ goreleaser check
 goreleaser build --snapshot --clean
 ```
 
-Thank you for helping make DrishtiScope the world's best Agentic AI observability platform!
+---
+
+Thank you for helping improve DrishtiScope and contributing to open-source systems observability!
