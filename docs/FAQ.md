@@ -72,7 +72,7 @@ Unlike tools that perform TLS decryption (uprobes on `SSL_write`/`SSL_read`), Dr
 
 ### 6. What is the CPU, memory, and kernel overhead of running DrishtiScope?
 
-DrishtiScope is engineered in Go 1.22+ and compiled to a lightweight, static native binary (~18 MB):
+DrishtiScope is engineered in Go 1.27+ and compiled to a lightweight, static native binary (~18 MB):
 - **CPU Overhead**: In Real `/proc` mode with a 1.5s refresh rate, background CPU consumption is under **0.5%–1.2%** of a single core. In high-frequency eBPF mode, kernel tracepoint sampling introduces less than **1.5%** overhead.
 - **Memory Footprint**: The Go daemon uses **18 MB to 35 MB RSS**.
 - **I/O Impact**: The embedded SQLite database utilizes write-ahead logging (WAL mode) with passive background checkpoints, writing only consolidated state snapshots to disk without blocking the main event loop.

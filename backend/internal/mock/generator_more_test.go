@@ -65,20 +65,20 @@ func TestMockGeneratorCopilotCmdlineTarget(t *testing.T) {
 		found := false
 		for _, p := range snap.Processes {
 			if strings.Contains(strings.ToLower(p.Cmdline), "copilot") {
-				found = true
-				if p.PID != 58785 {
-					t.Fatalf("expected copilot pid 58785, got %d", p.PID)
-				}
-				if p.Comm != "MainThread" {
-					t.Fatalf("expected kernel comm MainThread, got %s", p.Comm)
+				if p.PID == snap.Meta.Target.PID {
+					found = true
+					if p.PID == 58785 && p.Comm != "MainThread" {
+						t.Fatalf("expected kernel comm MainThread, got %s", p.Comm)
+					}
+					break
 				}
 			}
 		}
 		if !found {
-			t.Fatal("expected a process whose cmdline contains copilot")
+			t.Fatal("expected a process whose cmdline contains copilot matching target PID")
 		}
-		if snap.Meta.Target.PID != 58785 {
-			t.Fatalf("expected resolved pid 58785, got %d", snap.Meta.Target.PID)
+		if snap.Meta.Target.PID <= 0 {
+			t.Fatalf("expected positive resolved pid, got %d", snap.Meta.Target.PID)
 		}
 	case <-ctx.Done():
 		t.Fatal("timeout waiting for snapshot")

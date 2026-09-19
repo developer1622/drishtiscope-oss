@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.27"
           cache: true
       - name: Run Backend Tests with Coverage
         run: go test -v -cover ./...
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.27"
           cache: true
       - uses: actions/setup-node@v4
         with:
@@ -61,6 +61,9 @@ jobs:
       - name: Install Playwright Browsers
         working-directory: frontend
         run: npx playwright install --with-deps chromium
+      - name: Build Frontend Bundle
+        working-directory: frontend
+        run: npm run build
       - name: Build Backend
         working-directory: backend
         run: CGO_ENABLED=0 go build -o ../drishtiscope ./cmd/agentscope
@@ -70,7 +73,13 @@ jobs:
           DRISHTISCOPE_ADDR: "127.0.0.1:8080"
         run: |
           ../drishtiscope -addr=127.0.0.1:8080 -mode=mock &
-          sleep 2
+          for i in $(seq 1 30); do
+            if curl -s http://127.0.0.1:8080/api/health | grep -q '"ok":true'; then
+              echo "DrishtiScope backend is ready"
+              break
+            fi
+            sleep 1
+          done
           npm run test:e2e
       - name: Upload Playwright Report
         if: always()
@@ -87,7 +96,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.27"
       - uses: goreleaser/goreleaser-action@v6
         with:
           version: latest

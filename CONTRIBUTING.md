@@ -75,7 +75,7 @@ We are dedicated to providing a welcoming, inclusive, and harassment-free enviro
 ## 🛠️ Development Environment Setup
 
 ### Prerequisites
-- **Go**: Version 1.22 or newer (`go version`)
+- **Go**: Version 1.27 or newer (`go version`)
 - **Node.js**: Version 20 or newer (`node -v`)
 - **npm**: Version 9 or newer (`npm -v`)
 - **Linux** (native or WSL2 on Windows 10/11) with kernel headers for eBPF compilation (optional for mock/proc modes)

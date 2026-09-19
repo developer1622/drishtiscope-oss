@@ -1,6 +1,6 @@
 module github.com/agentscope/agentscope
 
-go 1.25.0
+go 1.27
 
 require (
 	github.com/cilium/ebpf v0.17.3

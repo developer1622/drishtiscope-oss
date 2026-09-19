@@ -1,18 +1,19 @@
 # syntax=docker/dockerfile:1
 
-FROM node:22-alpine AS ui
+FROM --platform=$BUILDPLATFORM node:22-alpine AS ui
 WORKDIR /ui
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
 RUN npm run build
 
-FROM golang:1.22-bookworm AS backend
+FROM --platform=$BUILDPLATFORM golang:1.27-bookworm AS backend
+ARG TARGETARCH
 WORKDIR /src
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 COPY backend/ ./
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /agentscope ./cmd/agentscope
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -ldflags="-s -w" -o /agentscope ./cmd/agentscope
 
 FROM debian:bookworm-slim
 RUN apt-get update \

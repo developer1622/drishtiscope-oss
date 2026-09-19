@@ -12,7 +12,7 @@
 
 [![CI](https://github.com/drishtiscope/drishtiscope/actions/workflows/ci.yml/badge.svg)](https://github.com/drishtiscope/drishtiscope/actions/workflows/ci.yml)
 [![Docker](https://github.com/drishtiscope/drishtiscope/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/drishtiscope/drishtiscope/actions/workflows/docker-publish.yml)
-[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go)](https://go.dev)
+[![Go Version](https://img.shields.io/badge/Go-1.27+-00ADD8?style=flat&logo=go)](https://go.dev)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react)](https://react.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Release](https://img.shields.io/badge/Single_Binary-~18_MB-blue.svg)](https://github.com/drishtiscope/drishtiscope/releases)

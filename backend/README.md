@@ -98,7 +98,7 @@ Attempts eBPF probe attachment first. If the kernel denies unprivileged BPF load
 ## 🛠️ Building & Running
 
 ### Prerequisites
-- Go 1.22+
+- Go 1.27+
 - Linux (x86_64 or aarch64), WSL2, macOS, or Windows
 
 ### Commands
